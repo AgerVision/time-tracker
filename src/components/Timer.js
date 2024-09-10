@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import CategoryDropdown from './CategoryDropdown';
+import IntervalForm from './IntervalForm';
 
 const Timer = ({ categories, addInterval, openAddIntervalModal, openCategoryModal }) => {
   const [isRunning, setIsRunning] = useState(false);
@@ -83,9 +84,6 @@ const Timer = ({ categories, addInterval, openAddIntervalModal, openCategoryModa
       console.log('Category modal closed callback', newCategory);
       if (newCategory && newCategory.id) {
         setCurrentCategoryId(newCategory.id);
-      }
-      if (categoryDropdownRef.current) {
-        categoryDropdownRef.current.focus();
       }
     }, true, true);
   };

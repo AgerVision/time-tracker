@@ -9,7 +9,7 @@ const generateId = () => {
   return `${datePart}${randomPart}`;
 };
 
-const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false }) => {
+const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false, onCategorySaved }) => {
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -56,21 +56,28 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
     }
 
     let updatedCategories;
+    let savedCategory;
     if (isEditing) {
       updatedCategories = localCategories.map(cat => 
         cat.id === editingCategory.id ? editingCategory : cat
       );
+      savedCategory = editingCategory;
       toast.success('Categoria a fost actualizată cu succes!');
     } else {
       const newCategory = { ...editingCategory, id: generateId(), active: true };
       updatedCategories = [...localCategories, newCategory];
+      savedCategory = newCategory;
       toast.success('Categoria a fost adăugată cu succes!');
     }
 
     setLocalCategories(updatedCategories);
     updateCategories(updatedCategories);
+    if (onCategorySaved) {
+      onCategorySaved(savedCategory);
+    }
     setEditingCategory(null);
     setIsEditing(false);
+    onClose();
   };
 
   const deleteCategory = (categoryToDelete) => {
