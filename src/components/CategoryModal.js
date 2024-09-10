@@ -9,11 +9,10 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
   const [showInactive, setShowInactive] = useState(false);  // Add this line
 
   useEffect(() => {
-    console.log('CategoryModal useEffect, addNewOnOpen:', addNewOnOpen, 'directAdd:', directAdd);
-    if (addNewOnOpen) {
+    if (isOpen && addNewOnOpen) {
       addNewCategory();
     }
-  }, [addNewOnOpen]);
+  }, [isOpen, addNewOnOpen]);
 
   const filteredCategories = showInactive 
     ? localCategories 
@@ -29,13 +28,11 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
   };
 
   const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingCategory(null);
     if (directAdd) {
-      onClose(editingCategory);
-    } else {
       onClose(null);
     }
-    setEditingCategory(null);
-    setIsEditModalOpen(false);
   };
 
   const saveCategory = () => {
@@ -106,7 +103,7 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
         <Modal
           isOpen={isOpen}
           onRequestClose={onClose}
-          contentLabel={directAdd ? "Adaugă Categorie Nouă" : "Editare Categorie"}
+          contentLabel="Categorii"
           className="modal"
           overlayClassName="overlay"
           ariaHideApp={false}
@@ -142,9 +139,33 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
             }
           }}
         >
+          <h2 className="text-xl font-semibold mb-4">Categorii</h2>
+          <div className="mb-4">
+            <button
+              onClick={addNewCategory}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Adaugă categorie nouă
+            </button>
+          </div>
+          <ul className="space-y-2">
+            {sortedCategories.map((category) => (
+              <li key={category.name} className="flex justify-between items-center">
+                <span>{category.name}</span>
+                <button
+                  onClick={() => openEditModal(category)}
+                  className="px-2 py-1 bg-gray-200 rounded"
+                >
+                  Editează
+                </button>
+              </li>
+            ))}
+          </ul>
           {isEditModalOpen && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">{directAdd ? "Adaugă Categorie Nouă" : "Editare Categorie"}</h2>
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">
+                {editingCategory.name ? "Editare Categorie" : "Adaugă Categorie Nouă"}
+              </h3>
               <input
                 type="text"
                 value={editingCategory ? editingCategory.name : ''}

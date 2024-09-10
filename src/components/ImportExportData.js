@@ -82,14 +82,14 @@ const ImportExportData = ({ intervals, categories, setIntervals, setCategories }
   };
 
   return (
-    <div className="flex flex-col space-y-2">
+    <div className="flex flex-col">
       <button
         onClick={exportData}
-        className="w-full px-4 py-2 bg-green-500 text-white rounded"
+        className="w-full px-4 py-2 bg-green-500 text-white rounded text-center cursor-pointer hover:bg-green-600 transition-colors duration-200"
       >
         Export date
       </button>
-      <label className="w-full px-4 py-2 bg-yellow-500 text-white rounded text-center cursor-pointer">
+      <label className="w-full px-4 py-2 bg-yellow-500 text-white rounded text-center cursor-pointer hover:bg-yellow-600 transition-colors duration-200">
         Import date
         <input
           ref={fileInputRef}

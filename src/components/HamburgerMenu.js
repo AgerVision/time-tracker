@@ -8,9 +8,12 @@ const HamburgerMenu = ({
   intervals, 
   categories, 
   setIntervals, 
-  setCategories 
+  setCategories
 }) => {
-  const menuItemClass = "block w-full text-left px-4 py-2 text-sm text-white hover:bg-blue-600 transition-colors duration-200";
+  const handleMenuItemClick = (action) => {
+    action();
+    setIsOpen(false);
+  };
 
   return (
     <div className="relative">
@@ -25,34 +28,20 @@ const HamburgerMenu = ({
       </button>
       
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-blue-500 rounded-md shadow-lg overflow-hidden z-10">
+        <div className="absolute right-0 mt-2 w-48 bg-blue-500 rounded-md shadow-lg overflow-hidden z-10 flex flex-col">
           <button
-            onClick={() => {
-              openCategoryModal();
-              setIsOpen(false);
-            }}
-            className={menuItemClass}
+            onClick={() => handleMenuItemClick(openCategoryModal)}
+            className="w-full px-4 py-2 text-white text-center hover:bg-blue-600 transition-colors duration-200"
           >
             Categorii
           </button>
-          <button
-            onClick={() => {
-              // Logica pentru import
-              setIsOpen(false);
-            }}
-            className={menuItemClass}
-          >
-            Import date
-          </button>
-          <button
-            onClick={() => {
-              // Logica pentru export
-              setIsOpen(false);
-            }}
-            className={menuItemClass}
-          >
-            Export date
-          </button>
+          <ImportExportData
+            intervals={intervals}
+            categories={categories}
+            setIntervals={setIntervals}
+            setCategories={setCategories}
+            onActionComplete={() => setIsOpen(false)}
+          />
         </div>
       )}
     </div>
