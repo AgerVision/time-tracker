@@ -70,6 +70,20 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
     }, true, true); // autoCloseOnSave is true by default
   };
 
+  const compareDates = (date1, time1, date2, time2) => {
+    if (date1 < date2) return -1;
+    if (date1 > date2) return 1;
+    if (time1 < time2) return -1;
+    if (time1 > time2) return 1;
+    return 0;
+  };
+
+  const addOneDay = (dateString) => {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
+  };
+
   const isOverlapping = (newInterval) => {
     return intervals.some((interval) => {
       if (editingInterval && interval.startDate === editingInterval.startDate &&
@@ -87,15 +101,17 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
   };
 
   const validateInterval = (intervalToValidate) => {
-    const start = new Date(`${intervalToValidate.startDate}T${intervalToValidate.startTime}`);
-    const end = new Date(`${intervalToValidate.endDate}T${intervalToValidate.endTime}`);
+    const comparison = compareDates(
+      intervalToValidate.startDate, intervalToValidate.startTime,
+      intervalToValidate.endDate, intervalToValidate.endTime
+    );
     
-    if (end <= start) {
+    if (comparison >= 0) {
       toast.error('Data/ora de sfârșit trebuie să fie după data/ora de început!');
       return false;
     }
     
-    const durationMinutes = (end - start) / 1000 / 60;
+    const durationMinutes = (new Date(`${intervalToValidate.endDate}T${intervalToValidate.endTime}`) - new Date(`${intervalToValidate.startDate}T${intervalToValidate.startTime}`)) / 1000 / 60;
     
     if (durationMinutes < 5) {
       toast.error('Durata intervalului trebuie să fie de cel puțin 5 minute!');
@@ -120,6 +136,13 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
     if (!roundedInterval.categoryId) {
       toast.error('Vă rugăm să selectați o categorie!');
       return;
+    }
+
+    // Explicit check for midnight crossing
+    if (roundedInterval.startDate === roundedInterval.endDate &&
+        roundedInterval.endTime < roundedInterval.startTime) {
+      // If end time is earlier than start time on the same date, it means we've crossed midnight
+      roundedInterval.endDate = addOneDay(roundedInterval.startDate);
     }
 
     if (validateInterval(roundedInterval)) {

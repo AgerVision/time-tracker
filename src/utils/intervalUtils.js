@@ -147,17 +147,27 @@ export const formatDuration = (minutes) => {
 };
 
 export const addInterval = (interval, intervals, categories, setIntervals, setCategories) => {
-  const start = new Date(`${interval.startDate}T${interval.startTime}`);
-  const end = new Date(`${interval.endDate}T${interval.endTime}`);
+  // Parse dates and times without timezone influence
+  const parseDateTime = (date, time) => {
+    const [year, month, day] = date.split('-').map(Number);
+    const [hours, minutes] = time.split(':').map(Number);
+    return new Date(Date.UTC(year, month - 1, day, hours, minutes));
+  };
+
+  const start = parseDateTime(interval.startDate, interval.startTime);
+  const end = parseDateTime(interval.endDate, interval.endTime);
   
-  const durationMinutes = (end - start) / 1000 / 60;
+  const durationMinutes = (end - start) / (1000 * 60);
   const roundedDuration = Math.round(durationMinutes / 5) * 5;
   const roundedEnd = new Date(start.getTime() + roundedDuration * 60 * 1000);
   
+  const formatDate = (date) => date.toISOString().split('T')[0];
+  const formatTime = (date) => date.toISOString().split('T')[1].slice(0, 5);
+
   const roundedInterval = {
     ...interval,
-    endDate: roundedEnd.toISOString().split('T')[0],
-    endTime: roundedEnd.toTimeString().split(' ')[0].slice(0, 5),
+    endDate: formatDate(roundedEnd),
+    endTime: formatTime(roundedEnd),
   };
   
   setIntervals(prevIntervals => [...prevIntervals, roundedInterval]);
