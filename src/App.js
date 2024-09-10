@@ -38,7 +38,9 @@ const TimeTrackerApp = () => {
       ...interval,
       id: `${new Date().toISOString().replace(/[-:T.]/g, '')}${Math.random().toString(36).substr(2, 6)}`
     };
+    console.log('Adding new interval:', newInterval);
     if (addInterval(newInterval, intervals, categories, setIntervals, setCategories)) {
+      console.log('Interval added successfully');
       toast.success('Interval adăugat cu succes!');
       setNewInterval({
         startDate: interval.endDate,
@@ -73,6 +75,12 @@ const TimeTrackerApp = () => {
     setCategories(newCategories);
     // Dacă folosiți local storage pentru persistență, adăugați și:
     localStorage.setItem('categories', JSON.stringify(newCategories));
+  };
+
+  const handleOpenAddIntervalModal = (interval) => {
+    setNewInterval(interval);
+    setEditingInterval(null);
+    openEditModal(interval);
   };
 
   const handleOpenEditModal = (interval) => {
@@ -125,7 +133,7 @@ const TimeTrackerApp = () => {
           <Timer 
             categories={categories.filter(cat => cat.active)} 
             addInterval={handleAddInterval}
-            openEditModal={handleOpenEditModal}
+            openAddIntervalModal={handleOpenAddIntervalModal}
             openCategoryModal={handleOpenCategoryModal}
           />
         </div>

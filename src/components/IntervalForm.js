@@ -123,7 +123,12 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
     }
 
     if (validateInterval(roundedInterval)) {
-      onSave(editingInterval ? { ...roundedInterval, id: editingInterval.id } : roundedInterval);
+      console.log('Saving interval:', roundedInterval);
+      if (editingInterval) {
+        onSave({ ...roundedInterval, id: editingInterval.id });
+      } else {
+        onSave(roundedInterval);
+      }
       if (typeof closeModal === 'function') {
         closeModal();
       }

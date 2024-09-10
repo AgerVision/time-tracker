@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import CategoryDropdown from './CategoryDropdown';
 
-const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) => {
+const Timer = ({ categories, addInterval, openAddIntervalModal, openCategoryModal }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [currentCategoryId, setCurrentCategoryId] = useState('');
@@ -59,7 +59,8 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
       categoryId: currentCategoryId,
     };
     
-    openEditModal(newInt);
+    console.log('Stopping timer, about to open add interval modal');
+    openAddIntervalModal(newInt);
     resetTimer();
   };
 
