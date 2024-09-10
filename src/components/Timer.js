@@ -5,7 +5,7 @@ import CategoryDropdown from './CategoryDropdown';
 const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
-  const [currentCategory, setCurrentCategory] = useState('');
+  const [currentCategoryId, setCurrentCategoryId] = useState('');
   const initialLoadDone = useRef(false);
   const categoryDropdownRef = useRef(null);
 
@@ -16,7 +16,7 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
       if (savedTimerState) {
         setIsRunning(savedTimerState.isRunning);
         setStartTime(savedTimerState.startTime ? new Date(savedTimerState.startTime) : null);
-        setCurrentCategory(savedTimerState.currentCategory);
+        setCurrentCategoryId(savedTimerState.currentCategoryId);
       }
       initialLoadDone.current = true;
     }
@@ -27,15 +27,15 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
       const timerState = {
         isRunning,
         startTime: startTime ? startTime.toISOString() : null,
-        currentCategory
+        currentCategoryId
       };
       console.log('Saving timer state:', timerState);
       localStorage.setItem('timerState', JSON.stringify(timerState));
     }
-  }, [isRunning, startTime, currentCategory]);
+  }, [isRunning, startTime, currentCategoryId]);
 
   const startTimer = () => {
-    if (!currentCategory) {
+    if (!currentCategoryId) {
       toast.error('Vă rugăm să selectați sau să introduceți o categorie!');
       return;
     }
@@ -56,7 +56,7 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
       startTime: startTime.toTimeString().split(' ')[0].slice(0, 5),
       endDate: roundedEndTime.toISOString().split('T')[0],
       endTime: roundedEndTime.toTimeString().split(' ')[0].slice(0, 5),
-      category: currentCategory,
+      categoryId: currentCategoryId,
     };
     
     openEditModal(newInt);
@@ -66,24 +66,23 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
   const resetTimer = () => {
     setIsRunning(false);
     setStartTime(null);
-    setCurrentCategory('');
+    setCurrentCategoryId('');
     localStorage.removeItem('timerState');
     console.log('Timer reset, localStorage cleared');
   };
 
   const handleCategoryChange = (e) => {
     const value = e.target.value;
-    setCurrentCategory(value);
+    setCurrentCategoryId(value);
   };
 
   const handleAddNewCategory = () => {
     console.log('Adding new category from Timer');
     openCategoryModal((newCategory) => {
       console.log('Category modal closed callback', newCategory);
-      if (newCategory && newCategory.name) {
-        setCurrentCategory(newCategory.name);
+      if (newCategory && newCategory.id) {
+        setCurrentCategoryId(newCategory.id);
       }
-      // Focus on the category dropdown after modal closes
       if (categoryDropdownRef.current) {
         categoryDropdownRef.current.focus();
       }
@@ -97,7 +96,7 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
         <>
           <CategoryDropdown
             ref={categoryDropdownRef}
-            value={currentCategory}
+            value={currentCategoryId}
             onChange={handleCategoryChange}
             categories={categories}
             onAddNew={handleAddNewCategory}
@@ -107,7 +106,7 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
       ) : (
         <>
           <div className="mb-4">
-            <p className="font-semibold">Categorie curentă: {currentCategory}</p>
+            <p className="font-semibold">Categorie curentă: {categories.find(cat => cat.id === currentCategoryId)?.name}</p>
             <p>Început la: {startTime.toLocaleTimeString()}</p>
           </div>
           <button onClick={stopTimer} className="w-full px-4 py-2 bg-red-500 text-white rounded">Stop</button>

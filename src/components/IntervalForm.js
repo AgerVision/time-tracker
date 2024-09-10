@@ -58,14 +58,14 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
 
   const handleCategoryChange = useCallback((e) => {
     const value = e.target.value;
-    setLocalInterval(prev => ({...prev, category: value}));
+    setLocalInterval(prev => ({...prev, categoryId: value}));
   }, []);
 
   const handleAddNewCategory = () => {
     openCategoryModal((newCategory) => {
-      if (newCategory && newCategory.name) {
+      if (newCategory && newCategory.id) {
         console.log('New category added:', newCategory);
-        setLocalInterval(prev => ({...prev, category: newCategory.name}));
+        setLocalInterval(prev => ({...prev, categoryId: newCategory.id}));
       }
     }, true, true);
   };
@@ -117,7 +117,7 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
       endTime: roundToNearestFiveMinutes(localInterval.endTime)
     };
 
-    if (!roundedInterval.category) {
+    if (!roundedInterval.categoryId) {
       toast.error('Vă rugăm să selectați o categorie!');
       return;
     }
@@ -193,7 +193,7 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
         </div>
         <div>
           <CategoryDropdown
-            value={localInterval.category}
+            value={localInterval.categoryId}
             onChange={handleCategoryChange}
             categories={categories}
             onAddNew={handleAddNewCategory}

@@ -9,7 +9,7 @@ const CategoryDropdown = forwardRef(({ value, onChange, categories, includeAddNe
     if (e.target.value === 'add_new') {
       onAddNew((newCategory) => {
         if (newCategory) {
-          onChange({ target: { value: newCategory.name } });
+          onChange({ target: { value: newCategory.id } });
         }
       });
     } else {
@@ -27,8 +27,8 @@ const CategoryDropdown = forwardRef(({ value, onChange, categories, includeAddNe
         aria-label="Alege categoria"
       >
         <option value="" disabled>Alege categoria</option>
-        {sortedCategories.map((cat, index) => (
-          <option key={index} value={cat.name}>{cat.name}</option>
+        {sortedCategories.map((cat) => (
+          <option key={cat.id} value={cat.id}>{cat.name}</option>
         ))}
         {includeAddNew && <option value="add_new">+ Adaugă categorie nouă</option>}
       </select>

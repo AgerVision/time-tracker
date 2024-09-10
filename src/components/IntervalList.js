@@ -14,7 +14,7 @@ const IntervalList = ({
   categories, 
   openEditModal, 
   openDeleteModal,
-  openCategoryModal  // Add this prop
+  openCategoryModal
 }) => {
   const { filteredIntervals, totalPeriodTime } = filterIntervals(intervals, filter, listView === 'graph');
 
@@ -34,6 +34,11 @@ const IntervalList = ({
 
   const today = new Date().toISOString().split('T')[0];
 
+  const getCategoryName = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'Unknown';
+  };
+
   const calculateDuration = (interval) => {
     const start = new Date(`${interval.startDate}T${interval.startTime}`);
     const end = new Date(`${interval.endDate}T${interval.endTime}`);
@@ -41,12 +46,11 @@ const IntervalList = ({
   };
 
   const groupedIntervals = Array.isArray(filteredIntervals) 
-    ? groupIntervals(filteredIntervals, calculateDuration)
+    ? groupIntervals(filteredIntervals, calculateDuration, getCategoryName)
     : {};
 
   const totalAllocatedTime = Object.values(groupedIntervals).reduce((sum, { totalTime }) => sum + totalTime, 0);
   const unallocatedTime = Math.max(0, totalPeriodTime - totalAllocatedTime);
-
   const chartData = Object.entries(groupedIntervals)
     .map(([category, data]) => ({
       name: category,
@@ -99,7 +103,6 @@ const IntervalList = ({
       </g>
     );
   };
-
   const renderLegend = (props) => {
     const { payload } = props;
 
@@ -135,12 +138,11 @@ const IntervalList = ({
 
   const handleAddNewCategory = () => {
     openCategoryModal((newCategory) => {
-      if (newCategory && newCategory.name) {
+      if (newCategory && newCategory.id) {
         setFilter(prevFilter => ({ ...prevFilter, category: newCategory.id }));
       }
     }, true, true);
   };
-
   return (
     <div>
       {/* Cronometru și Adaugă interval rămân neschimbate */}
@@ -253,7 +255,7 @@ const IntervalList = ({
             </thead>
             <tbody>
               {filteredIntervals.map((interval, index) => (
-                <tr key={index} className={interval.category === 'Unallocated' ? 'bg-gray-100' : ''}>
+                <tr key={index} className={interval.categoryId === 'Unallocated' ? 'bg-gray-100' : ''}>
                   <td className="border p-2">
                     <div className="text-sm">
                       {listView === 'table' ? (
@@ -284,7 +286,7 @@ const IntervalList = ({
                       )}
                     </div>
                   </td>
-                  <td className="border p-2">{interval.category}</td>
+                  <td className="border p-2">{getCategoryName(interval.categoryId)}</td>
                   <td className="border p-2">{formatDuration(calculateDuration(interval))}</td>
                 </tr>
               ))}

@@ -56,13 +56,12 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
         duration: calculateDuration(currentStartDate, currentEndDate)
       });
     }
-
     return result;
   };
 
   let filteredIntervals = intervals.filter(interval => {
     const dateFilter = applyDateFilter(interval, filter.fromDate, filter.toDate);
-    const categoryFilter = filter.category === 'all' || interval.category === filter.category;
+    const categoryFilter = filter.category === 'all' || interval.categoryId === filter.category;
     return dateFilter && categoryFilter;
   });
 
@@ -78,7 +77,7 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
         const start = new Date(`${splitInterval.startDate}T${splitInterval.startTime}`);
         const end = new Date(`${splitInterval.endDate}T${splitInterval.endTime}`);
         return applyDateFilter(splitInterval, filterFromDate, filterToDate) &&
-               (filter.category === 'all' || splitInterval.category === filter.category);
+               (filter.category === 'all' || splitInterval.categoryId === filter.category);
       });
     });
   }
@@ -89,7 +88,6 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
     const dateA = new Date(`${a.startDate}T${a.startTime}`);
     return dateB - dateA; // Ordinea inversată pentru sortare descrescătoare
   });
-
   // Add unallocated time intervals
   const result = [];
   let lastEnd = null;
@@ -122,20 +120,20 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
   return { filteredIntervals: result, totalPeriodTime };
 };
 
-export const groupIntervals = (intervals, calculateDuration) => {
+export const groupIntervals = (intervals, calculateDuration, getCategoryName = (id) => id) => {
   if (!Array.isArray(intervals)) {
     console.error('groupIntervals received non-array input:', intervals);
     return {};
   }
   
   return intervals.reduce((groups, interval) => {
-    const category = interval.category || 'Uncategorized';
-    if (!groups[category]) {
-      groups[category] = { totalTime: 0, intervals: [] };
+    const categoryName = getCategoryName(interval.categoryId) || 'Uncategorized';
+    if (!groups[categoryName]) {
+      groups[categoryName] = { totalTime: 0, intervals: [] };
     }
     const duration = calculateDuration(interval);
-    groups[category].totalTime += duration;
-    groups[category].intervals.push(interval);
+    groups[categoryName].totalTime += duration;
+    groups[categoryName].intervals.push(interval);
     return groups;
   }, {});
 };
@@ -169,7 +167,6 @@ export const addInterval = (interval, intervals, categories, setIntervals, setCa
   }
   return true;
 };
-
 export const deleteInterval = (index, intervals, setIntervals) => {
   setIntervals(prevIntervals => prevIntervals.filter((_, i) => i !== index));
 };
