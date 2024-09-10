@@ -180,7 +180,7 @@ const IntervalList = ({
                   onChange={handleFilterChange}
                   className="p-2 border rounded flex-grow"
                 >
-                  <option value="all">Toate categoriile</option>
+                  <option key="all" value="all">Toate categoriile</option>
                   {sortedCategories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
