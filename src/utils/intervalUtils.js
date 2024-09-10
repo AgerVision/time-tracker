@@ -2,13 +2,13 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
   if (!filter) return { filteredIntervals: intervals, totalPeriodTime: 0 };
 
   const applyDateFilter = (interval, fromDate, toDate) => {
-    const start = new Date(`${interval.startDate}T${interval.startTime}`);
-    const end = new Date(`${interval.endDate}T${interval.endTime}`);
-    const filterFromDate = new Date(fromDate);
-    const filterToDate = new Date(toDate);
-    filterToDate.setHours(23, 59, 59, 999);  // Set to end of day
+    const start = new Date(`${interval.startDate}T${interval.startTime}Z`);
+    const end = new Date(`${interval.endDate}T${interval.endTime}Z`);
+    const filterFromDate = new Date(`${fromDate}T00:00:00Z`);
+    const filterToDate = new Date(`${toDate}T23:59:59.999Z`);
 
-    return (start <= filterToDate && end >= filterFromDate);
+    // Modificăm condiția pentru a exclude intervalele care se termină exact la miezul nopții zilei de început
+    return (start < filterToDate && end > filterFromDate);
   };
 
   const splitIntervalsByDay = (interval) => {
@@ -66,17 +66,16 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
   });
 
   if (splitOverMidnight) {
-    const filterFromDate = new Date(filter.fromDate);
-    filterFromDate.setHours(0, 0, 0, 0);
-    const filterToDate = new Date(filter.toDate);
-    filterToDate.setHours(23, 59, 59, 999);
+    const filterFromDate = new Date(`${filter.fromDate}T00:00:00Z`);
+    const filterToDate = new Date(`${filter.toDate}T23:59:59.999Z`);
 
     filteredIntervals = filteredIntervals.flatMap(interval => {
       const splitIntervals = splitIntervalsByDay(interval);
       return splitIntervals.filter(splitInterval => {
-        const start = new Date(`${splitInterval.startDate}T${splitInterval.startTime}`);
-        const end = new Date(`${splitInterval.endDate}T${splitInterval.endTime}`);
-        return applyDateFilter(splitInterval, filterFromDate, filterToDate) &&
+        const start = new Date(`${splitInterval.startDate}T${splitInterval.startTime}Z`);
+        const end = new Date(`${splitInterval.endDate}T${splitInterval.endTime}Z`);
+        // Folosim aceeași logică de filtrare și pentru intervalele splituite
+        return (start < filterToDate && end > filterFromDate) &&
                (filter.category === 'all' || splitInterval.categoryId === filter.category);
       });
     });
@@ -147,11 +146,8 @@ export const formatDuration = (minutes) => {
 };
 
 export const addInterval = (interval, intervals, categories, setIntervals, setCategories) => {
-  // Parse dates and times without timezone influence
   const parseDateTime = (date, time) => {
-    const [year, month, day] = date.split('-').map(Number);
-    const [hours, minutes] = time.split(':').map(Number);
-    return new Date(Date.UTC(year, month - 1, day, hours, minutes));
+    return new Date(`${date}T${time}Z`);
   };
 
   const start = parseDateTime(interval.startDate, interval.startTime);
