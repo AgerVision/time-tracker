@@ -168,8 +168,8 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
                   className="p-2 border rounded flex-grow"
                 >
                   <option value="all">Toate categoriile</option>
-                  {sortedCategories.map((category, index) => (
-                    <option key={index} value={category.name}>{category.name}</option>
+                  {sortedCategories.map((category) => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
                 </select>
               </div>

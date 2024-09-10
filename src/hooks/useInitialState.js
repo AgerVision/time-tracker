@@ -1,5 +1,13 @@
 import { useState } from 'react';
 
+// Add this function at the top of the file
+const generateId = () => {
+  const now = new Date();
+  const datePart = now.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+  const randomPart = Math.random().toString(36).substr(2, 6);
+  return `${datePart}${randomPart}`;
+};
+
 export const useInitialState = () => {
   const [intervals, setIntervals] = useState(() => {
     const savedIntervals = localStorage.getItem('timeIntervals');
@@ -8,9 +16,12 @@ export const useInitialState = () => {
 
   const [categories, setCategories] = useState(() => {
     const savedCategories = localStorage.getItem('categories');
-    return savedCategories ? JSON.parse(savedCategories).map(cat => 
-      typeof cat === 'string' ? { name: cat, active: true } : cat
-    ) : [];
+    return savedCategories ? JSON.parse(savedCategories).map(cat => {
+      if (typeof cat === 'string') {
+        return { name: cat, active: true, id: generateId() };
+      }
+      return cat.id ? cat : { ...cat, id: generateId() };
+    }) : [];
   });
 
   const [newInterval, setNewInterval] = useState(() => {

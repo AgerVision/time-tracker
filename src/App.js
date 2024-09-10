@@ -83,29 +83,17 @@ const TimeTrackerApp = () => {
 
   const handleOpenCategoryModal = (callback, addNew = false, directAdd = false) => {
     console.log('Opening category modal, addNew:', addNew, 'directAdd:', directAdd);
-    closeCategoryModal();
-    setTimeout(() => {
-      setAddNewCategoryOnOpen(addNew);
-      setDirectAdd(directAdd);
-      openCategoryModal();
-      setCategoryModalCallback(() => (newCategory) => {
-        console.log('Category modal callback called with:', newCategory);
-        if (callback) {
-          callback(newCategory || null);
-        }
-        closeCategoryModal();
-      });
-    }, 100); // 100ms delay
+    setAddNewCategoryOnOpen(addNew);
+    setDirectAdd(directAdd);
+    setCategoryModalCallback(() => callback);
+    openCategoryModal();
   };
 
   const handleCloseCategoryModal = () => {
     closeCategoryModal();
     setAddNewCategoryOnOpen(false);
     setDirectAdd(false);
-    if (categoryModalCallback) {
-      categoryModalCallback(null);
-      setCategoryModalCallback(null);
-    }
+    setCategoryModalCallback(null);
   };
 
   return (
