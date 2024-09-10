@@ -5,7 +5,17 @@ import { differenceInMinutes } from 'date-fns';
 import { formatTimeWithoutSeconds } from '../utils/intervalUtils';
 import { format, isSameDay } from 'date-fns';
 
-const IntervalList = ({ intervals, filter, setFilter, listView, setListView, categories, openEditModal, openDeleteModal }) => {
+const IntervalList = ({ 
+  intervals, 
+  filter, 
+  setFilter, 
+  listView, 
+  setListView, 
+  categories, 
+  openEditModal, 
+  openDeleteModal,
+  openCategoryModal  // Add this prop
+}) => {
   const { filteredIntervals, totalPeriodTime } = filterIntervals(intervals, filter, listView === 'graph');
 
   const handleFilterChange = (e) => {
@@ -123,6 +133,14 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
     }
   };
 
+  const handleAddNewCategory = () => {
+    openCategoryModal((newCategory) => {
+      if (newCategory && newCategory.name) {
+        setFilter(prevFilter => ({ ...prevFilter, category: newCategory.id }));
+      }
+    }, true, true);
+  };
+
   return (
     <div>
       {/* Cronometru și Adaugă interval rămân neschimbate */}
@@ -186,6 +204,12 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
                 className="px-4 py-2 bg-blue-500 text-white rounded"
               >
                 {listView === 'table' ? 'Vizualizare grafic' : 'Vizualizare tabel'}
+              </button>
+              <button
+                onClick={handleAddNewCategory}
+                className="px-2 py-1 bg-blue-500 text-white rounded ml-2"
+              >
+                +
               </button>
             </div>
           </div>

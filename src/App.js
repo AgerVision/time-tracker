@@ -147,6 +147,7 @@ const TimeTrackerApp = () => {
             categories={categories}
             openEditModal={openEditModal}
             openDeleteModal={openDeleteModal}
+            openCategoryModal={handleOpenCategoryModal}  // Add this line
           />
         </div>
       </div>
@@ -181,6 +182,12 @@ const TimeTrackerApp = () => {
         intervals={intervals}
         addNewOnOpen={addNewCategoryOnOpen}
         directAdd={directAdd}
+        onCategorySaved={(newCategory) => {
+          if (categoryModalCallback) {
+            categoryModalCallback(newCategory);
+          }
+          handleCloseCategoryModal();
+        }}
       />
     </div>
   );

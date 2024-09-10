@@ -9,7 +9,7 @@ const generateId = () => {
   return `${datePart}${randomPart}`;
 };
 
-const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false }) => {
+const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false, onCategorySaved }) => {
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -56,14 +56,16 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
     }
 
     let updatedCategories;
+    let savedCategory;
     if (isEditing) {
       updatedCategories = localCategories.map(cat => 
         cat.id === editingCategory.id ? editingCategory : cat
       );
+      savedCategory = editingCategory;
       toast.success('Categoria a fost actualizată cu succes!');
     } else {
-      const newCategory = { ...editingCategory, id: generateId() };
-      updatedCategories = [...localCategories, newCategory];
+      savedCategory = { ...editingCategory, id: generateId() };
+      updatedCategories = [...localCategories, savedCategory];
       toast.success('Categoria a fost adăugată cu succes!');
     }
 
@@ -71,6 +73,9 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
     updateCategories(updatedCategories);
     setEditingCategory(null);
     setIsEditing(false);
+    
+    // Apelăm callback-ul onCategorySaved cu categoria salvată
+    onCategorySaved(savedCategory);
   };
 
   const deleteCategory = (categoryToDelete) => {
