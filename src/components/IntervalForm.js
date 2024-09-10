@@ -91,14 +91,14 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
     const end = new Date(`${intervalToValidate.endDate}T${intervalToValidate.endTime}`);
     
     if (end <= start) {
-      toast.error('Data/ora de sfârit trebuie să fie după data/ora de început!');
+      toast.error('Data/ora de sfârșit trebuie să fie după data/ora de început!');
       return false;
     }
     
     const durationMinutes = (end - start) / 1000 / 60;
     
     if (durationMinutes < 5) {
-      toast.error('Durata intervalului trebuie s fie de cel puțin 5 minute!');
+      toast.error('Durata intervalului trebuie să fie de cel puțin 5 minute!');
       return false;
     }
 
