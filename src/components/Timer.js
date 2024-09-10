@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import CategoryDropdown from './CategoryDropdown';
 
-const Timer = ({ categories, addInterval, openEditModal }) => {
+const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [currentCategory, setCurrentCategory] = useState('');
   const initialLoadDone = useRef(false);
+  const categoryDropdownRef = useRef(null);
 
   useEffect(() => {
     if (!initialLoadDone.current) {
@@ -72,11 +73,21 @@ const Timer = ({ categories, addInterval, openEditModal }) => {
 
   const handleCategoryChange = (e) => {
     const value = e.target.value;
-    if (value === 'add_new') {
-      // This should be handled in the parent component
-    } else {
-      setCurrentCategory(value);
-    }
+    setCurrentCategory(value);
+  };
+
+  const handleAddNewCategory = () => {
+    console.log('Adding new category from Timer');
+    openCategoryModal((newCategory) => {
+      console.log('Category modal closed callback', newCategory);
+      if (newCategory && newCategory.name) {
+        setCurrentCategory(newCategory.name);
+      }
+      // Focus on the category dropdown after modal closes
+      if (categoryDropdownRef.current) {
+        categoryDropdownRef.current.focus();
+      }
+    }, true, true);
   };
 
   return (
@@ -85,9 +96,11 @@ const Timer = ({ categories, addInterval, openEditModal }) => {
       {!isRunning ? (
         <>
           <CategoryDropdown
+            ref={categoryDropdownRef}
             value={currentCategory}
             onChange={handleCategoryChange}
             categories={categories}
+            onAddNew={handleAddNewCategory}
           />
           <button onClick={startTimer} className="w-full px-4 py-2 bg-green-500 text-white rounded">Start</button>
         </>

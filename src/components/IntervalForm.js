@@ -5,7 +5,7 @@ import Modal from 'react-modal';
 import { filterIntervals, groupIntervals, formatDuration } from '../utils/intervalUtils';
 import { differenceInMinutes } from 'date-fns';
 
-const IntervalForm = ({ interval, setInterval, categories, onSave, openAddCategoryModal, intervals, isModalOpen, closeModal, filter, editingInterval }) => {
+const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryModal, intervals, isModalOpen, closeModal, filter, editingInterval, openDeleteModal }) => {
   useEffect(() => {
     if (editingInterval) {
       setLocalInterval(editingInterval);
@@ -58,12 +58,17 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openAddCatego
 
   const handleCategoryChange = useCallback((e) => {
     const value = e.target.value;
-    if (value === 'add_new') {
-      openAddCategoryModal();
-    } else {
-      setLocalInterval(prev => ({...prev, category: value}));
-    }
-  }, [openAddCategoryModal]);
+    setLocalInterval(prev => ({...prev, category: value}));
+  }, []);
+
+  const handleAddNewCategory = () => {
+    openCategoryModal((newCategory) => {
+      if (newCategory && newCategory.name) {
+        console.log('New category added:', newCategory);
+        setLocalInterval(prev => ({...prev, category: newCategory.name}));
+      }
+    }, true, true);
+  };
 
   const isOverlapping = (newInterval) => {
     return intervals.some((interval) => {
@@ -86,7 +91,7 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openAddCatego
     const end = new Date(`${intervalToValidate.endDate}T${intervalToValidate.endTime}`);
     
     if (end <= start) {
-      toast.error('Data/ora de sfârșit trebuie să fie după data/ora de început!');
+      toast.error('Data/ora de sfârit trebuie să fie după data/ora de început!');
       return false;
     }
     
@@ -140,68 +145,69 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openAddCatego
   const timeOptions = generateTimeOptions();
 
   const formContent = (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block mb-1">Data Start</label>
-          <input
-            type="date"
-            value={localInterval.startDate}
-            onChange={(e) => handleTimeChange('startDate', e.target.value)}
-            className="w-full p-2 border rounded"
-          />
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="col-span-1">
+            <label className="text-sm text-gray-600 block mb-1">Data Start</label>
+            <input
+              type="date"
+              value={localInterval.startDate}
+              onChange={(e) => handleTimeChange('startDate', e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded-md text-m appearance-none"
+            />
+          </div>
+          <div className="col-span-1">
+            <label className="text-sm text-gray-600 block mb-1">Ora Start</label>
+            <input
+              type="time"
+              value={localInterval.startTime}
+              onChange={(e) => handleTimeChange('startTime', e.target.value)}
+              onBlur={() => handleTimeBlur('startTime')}
+              className="w-full p-2 bg-gray-100 rounded-md text-m appearance-none"
+              step="60"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="col-span-1">
+            <label className="text-sm text-gray-600 block mb-1">Data Sfârșit</label>
+            <input
+              type="date"
+              value={localInterval.endDate}
+              onChange={(e) => handleTimeChange('endDate', e.target.value)}
+              className="w-full p-2 bg-gray-100 rounded-md text-m appearance-none"
+            />
+          </div>
+          <div className="col-span-1">
+            <label className="text-sm text-gray-600 block mb-1">Ora Sfârșit</label>
+            <input
+              type="time"
+              value={localInterval.endTime}
+              onChange={(e) => handleTimeChange('endTime', e.target.value)}
+              onBlur={() => handleTimeBlur('endTime')}
+              className="w-full p-2 bg-gray-100 rounded-md text-m appearance-none"
+              step="60"
+              min={localInterval.startDate === localInterval.endDate ? localInterval.startTime : undefined}
+            />
+          </div>
         </div>
         <div>
-          <label className="block mb-1">Ora Start</label>
-          <input
-            type="time"
-            value={localInterval.startTime}
-            onChange={(e) => handleTimeChange('startTime', e.target.value)}
-            onBlur={() => handleTimeBlur('startTime')}
-            className="w-full p-2 border rounded"
-            step="60"
-            list="timeOptions"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Data Sfârșit</label>
-          <input
-            type="date"
-            value={localInterval.endDate}
-            onChange={(e) => handleTimeChange('endDate', e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Ora Sfârșit</label>
-          <input
-            type="time"
-            value={localInterval.endTime}
-            onChange={(e) => handleTimeChange('endTime', e.target.value)}
-            onBlur={() => handleTimeBlur('endTime')}
-            className="w-full p-2 border rounded"
-            step="60"
-            list="timeOptions"
-            min={localInterval.startDate === localInterval.endDate ? localInterval.startTime : undefined}
-          />
-        </div>
-        <div className="md:col-span-2">
           <CategoryDropdown
             value={localInterval.category}
             onChange={handleCategoryChange}
             categories={categories}
+            onAddNew={handleAddNewCategory}
           />
         </div>
-        <div className="md:col-span-2">
-          <button onClick={handleSave} className="w-full px-4 py-2 bg-blue-500 text-white rounded">Salvează</button>
+        <div>
+          <button 
+            onClick={handleSave} 
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors"
+          >
+            Salvează
+          </button>
         </div>
       </div>
-      <datalist id="timeOptions">
-        {timeOptions.map((option) => (
-          <option key={option} value={option} />
-        ))}
-      </datalist>
-    </>
   );
 
   const calculateDuration = (interval) => {

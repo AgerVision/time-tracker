@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { filterIntervals, groupIntervals, formatDuration } from '../utils/intervalUtils';
 import { differenceInMinutes } from 'date-fns';
 import { formatTimeWithoutSeconds } from '../utils/intervalUtils';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 
 const IntervalList = ({ intervals, filter, setFilter, listView, setListView, categories, openEditModal, openDeleteModal }) => {
   const { filteredIntervals, totalPeriodTime } = filterIntervals(intervals, filter, listView === 'graph');
@@ -40,15 +40,13 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
   const chartData = Object.entries(groupedIntervals)
     .map(([category, data]) => ({
       name: category,
-      value: data.totalTime,
-      percentage: (data.totalTime / totalPeriodTime) * 100  // Înmulțim cu 100 aici
+      value: data.totalTime
     }));
 
   if (unallocatedTime > 0) {
     chartData.push({
       name: 'Nealocat',
-      value: unallocatedTime,
-      percentage: (unallocatedTime / totalPeriodTime) * 100  // Înmulțim cu 100 aici
+      value: unallocatedTime
     });
   }
 
@@ -59,17 +57,36 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
     const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 30;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    // Folosim direct procentul calculat din chartData
-    const displayPercent = `${chartData[index].percentage.toFixed(1)}%`;
+    // Afișăm eticheta doar dacă procentul este mai mare de 5%
+    if (percent < 0.05) return null;
 
     return (
-      <text x={x} y={y} fill="black" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-        {`${name} ${displayPercent}`}
-      </text>
+      <g>
+        <text 
+          x={x} 
+          y={y-10} 
+          fill="black" 
+          textAnchor="middle" 
+          dominantBaseline="central"
+          className="text-xs md:text-sm font-semibold"
+        >
+          {name}
+        </text>
+        <text 
+          x={x} 
+          y={y+10} 
+          fill="black" 
+          textAnchor="middle" 
+          dominantBaseline="central"
+          className="text-xs md:text-sm"
+        >
+          {formatDuration(chartData[index].value)}
+        </text>
+      </g>
     );
   };
 
@@ -77,13 +94,12 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
     const { payload } = props;
 
     return (
-      <ul className="list-none p-0 mt-4">
+      <ul className="list-none p-0 mt-4 flex flex-wrap justify-center">
         {payload.map((entry, index) => (
-          <li key={`item-${index}`} className="inline-block mr-4 mb-2">
+          <li key={`item-${index}`} className="mr-4 mb-2">
             <span className="inline-block w-3 h-3 mr-1" style={{ backgroundColor: entry.color }}></span>
-            <span>
-              {entry.value}: {formatDuration(entry.payload.value)} 
-              ({entry.payload.percentage.toFixed(1)}%)
+            <span className="text-sm">
+              {entry.value}: {formatDuration(entry.payload.value)}
             </span>
           </li>
         ))}
@@ -96,126 +112,162 @@ const IntervalList = ({ intervals, filter, setFilter, listView, setListView, cat
     a.name.localeCompare(b.name, 'ro', { sensitivity: 'base' })
   );
 
+  const formatDateTimeCompact = (startDate, startTime, endDate, endTime) => {
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
+    
+    if (isSameDay(start, end)) {
+      return `${format(start, 'dd.MM.yyyy')} ${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+    } else {
+      return `${format(start, 'dd.MM.yyyy HH:mm')} - ${format(end, 'dd.MM.yyyy HH:mm')}`;
+    }
+  };
+
   return (
     <div>
-      <div className="mb-4 flex items-center space-x-2">
-        <div className="flex items-center space-x-1">
-          <label htmlFor="fromDate" className="text-sm">De la:</label>
-          <input
-            id="fromDate"
-            type="date"
-            name="fromDate"
-            value={filter.fromDate || today}
-            onChange={handleFilterChange}
-            className="p-2 border rounded"
-          />
+      {/* Cronometru și Adaugă interval rămân neschimbate */}
+      
+      {/* Adăugăm un container cu border și fundal alb pentru secțiunea de raport */}
+      <div className="border rounded-lg p-4 mt-4 shadow-sm bg-white">
+        <h2 className="text-xl font-semibold mb-4">Raport</h2>
+        <div className="mb-4">
+          {/* Controalele de filtrare existente */}
+          <div className="flex flex-col space-y-2 mb-2">
+            <div className="flex items-center">
+              <label htmlFor="fromDate" className="text-sm w-20">De la:</label>
+              <input
+                id="fromDate"
+                type="date"
+                name="fromDate"
+                value={filter.fromDate || today}
+                onChange={handleFilterChange}
+                className="p-2 border rounded flex-grow"
+              />
+            </div>
+            <div className="flex items-center">
+              <label htmlFor="toDate" className="text-sm w-20">Până la:</label>
+              <input
+                id="toDate"
+                type="date"
+                name="toDate"
+                value={filter.toDate || today}
+                onChange={handleFilterChange}
+                className="p-2 border rounded flex-grow"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col space-y-2">
+            {listView === 'table' && (
+              <div className="flex items-center">
+                <label htmlFor="category" className="text-sm w-20">Categorie:</label>
+                <select
+                  id="category"
+                  name="category"
+                  value={filter.category}
+                  onChange={handleFilterChange}
+                  className="p-2 border rounded flex-grow"
+                >
+                  <option value="all">Toate categoriile</option>
+                  {sortedCategories.map((category, index) => (
+                    <option key={index} value={category.name}>{category.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setListView(listView === 'table' ? 'graph' : 'table');
+                  if (listView === 'table') {
+                    // Reset category filter when switching to graph view
+                    setFilter(prevFilter => ({ ...prevFilter, category: 'all' }));
+                  }
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                {listView === 'table' ? 'Vizualizare grafic' : 'Vizualizare tabel'}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center space-x-1">
-          <label htmlFor="toDate" className="text-sm">Până la:</label>
-          <input
-            id="toDate"
-            type="date"
-            name="toDate"
-            value={filter.toDate || today}
-            onChange={handleFilterChange}
-            className="p-2 border rounded"
-          />
-        </div>
-        {listView === 'table' && (
-          <div className="flex items-center space-x-1">
-            <label htmlFor="category" className="text-sm">Categorie:</label>
-            <select
-              id="category"
-              name="category"
-              value={filter.category}
-              onChange={handleFilterChange}
-              className="p-2 border rounded"
-            >
-              <option value="all">Toate categoriile</option>
-              {sortedCategories.map((category, index) => (
-                <option key={index} value={category.name}>{category.name}</option>
-              ))}
-            </select>
+        
+        {listView === 'graph' && chartData.length > 0 && (
+          <div className="mt-4 mb-8">
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  outerRadius="80%"
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.name === 'Nealocat' ? '#cccccc' : COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value, name) => [formatDuration(value), name]}
+                />
+                <Legend content={renderLegend} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         )}
-        <button
-          onClick={() => {
-            setListView(listView === 'table' ? 'graph' : 'table');
-            if (listView === 'table') {
-              // Reset category filter when switching to graph view
-              setFilter(prevFilter => ({ ...prevFilter, category: 'all' }));
-            }
-          }}
-          className="px-4 py-2 bg-blue-500 text-white rounded ml-auto"
-        >
-          {listView === 'table' ? 'Vizualizare grafic' : 'Vizualizare tabel'}
-        </button>
-      </div>
-      
-      {listView === 'graph' && chartData.length > 0 && (
-        <div className="mt-4 mb-8">
-          <ResponsiveContainer width="100%" height={500}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={renderCustomizedLabel}
-                outerRadius={150}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.name === 'Nealocat' ? '#cccccc' : COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value, name, props) => [
-                  `${formatDuration(value)} (${props.payload.percentage.toFixed(1)}%)`,
-                  name
-                ]}
-              />
-              <Legend content={renderLegend} />
-            </PieChart>
-          </ResponsiveContainer>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border p-2 text-left">Interval</th>
+                <th className="border p-2 text-left">Categorie</th>
+                <th className="border p-2 text-left">Durată</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredIntervals.map((interval, index) => (
+                <tr key={index} className={interval.category === 'Unallocated' ? 'bg-gray-100' : ''}>
+                  <td className="border p-2">
+                    <div className="text-sm">
+                      {listView === 'table' ? (
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openEditModal(interval);
+                          }}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {formatDateTimeCompact(
+                            interval.startDate, 
+                            interval.startTime, 
+                            interval.endDate, 
+                            interval.endTime
+                          )}
+                        </a>
+                      ) : (
+                        <span>
+                          {formatDateTimeCompact(
+                            interval.startDate, 
+                            interval.startTime, 
+                            interval.endDate, 
+                            interval.endTime
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="border p-2">{interval.category}</td>
+                  <td className="border p-2">{formatDuration(calculateDuration(interval))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
-      <table className="w-full border-collapse border">
-        <thead>
-          <tr>
-            <th className="border p-2">Data Start</th>
-            <th className="border p-2">Ora Start</th>
-            <th className="border p-2">Data Sfârșit</th>
-            <th className="border p-2">Ora Sfârșit</th>
-            <th className="border p-2">Categorie</th>
-            <th className="border p-2">Durat</th>
-            {listView === 'table' && <th className="border p-2">Acțiuni</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredIntervals.map((interval, index) => (
-            <tr key={index} className={interval.category === 'Unallocated' ? 'bg-gray-100' : ''}>
-              <td className="border p-2">{interval.startDate}</td>
-              <td className="border p-2">{formatTimeWithoutSeconds(interval.startTime)}</td>
-              <td className="border p-2">{interval.endDate}</td>
-              <td className="border p-2">{formatTimeWithoutSeconds(interval.endTime)}</td>
-              <td className="border p-2">{interval.category}</td>
-              <td className="border p-2">{formatDuration(calculateDuration(interval))}</td>
-              {listView === 'table' && (
-                <td className="border p-2">
-                  {interval.category !== 'Unallocated' && (
-                    <>
-                      <button onClick={() => openEditModal(interval)} className="mr-2 px-2 py-1 bg-blue-500 text-white rounded">Editează</button>
-                      <button onClick={() => openDeleteModal(interval)} className="px-2 py-1 bg-red-500 text-white rounded">Șterge</button>
-                    </>
-                  )}
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </div>
     </div>
   );
 };

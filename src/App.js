@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import IntervalForm from './components/IntervalForm';
@@ -11,6 +11,7 @@ import { useInitialState } from './hooks/useInitialState';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { addInterval, deleteInterval, saveEditedInterval } from './utils/intervalUtils';
 import ImportExportData from './components/ImportExportData';
+import HamburgerMenu from './components/HamburgerMenu';
 
 const TimeTrackerApp = () => {
   const { 
@@ -24,6 +25,11 @@ const TimeTrackerApp = () => {
     openDeleteModal, closeDeleteModal, openCategoryModal, closeCategoryModal,
     setEditingInterval
   } = useModals();
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [categoryModalCallback, setCategoryModalCallback] = useState(null);
+  const [addNewCategoryOnOpen, setAddNewCategoryOnOpen] = useState(false);
+  const [directAdd, setDirectAdd] = useState(false);
 
   useLocalStorage(intervals, categories);
 
@@ -48,6 +54,7 @@ const TimeTrackerApp = () => {
     if (intervalToDelete !== null) {
       setIntervals(prevIntervals => prevIntervals.filter(interval => interval.id !== intervalToDelete.id));
       closeDeleteModal();
+      closeEditModal();  // Add this line to close the edit modal
       toast.success('Interval șters cu succes!');
     }
   };
@@ -64,41 +71,69 @@ const TimeTrackerApp = () => {
 
   const updateCategories = (newCategories) => {
     setCategories(newCategories);
+    // Dacă folosiți local storage pentru persistență, adăugați și:
+    localStorage.setItem('categories', JSON.stringify(newCategories));
   };
 
   const handleOpenEditModal = (interval) => {
     setNewInterval(interval);
-    setEditingInterval(null); // Ensure we're in "add" mode, not "edit" mode
+    setEditingInterval(interval);
     openEditModal(interval);
+  };
+
+  const handleOpenCategoryModal = (callback, addNew = false, directAdd = false) => {
+    console.log('Opening category modal, addNew:', addNew, 'directAdd:', directAdd);
+    setAddNewCategoryOnOpen(addNew);
+    setDirectAdd(directAdd);
+    closeCategoryModal(); // Ensure the modal is closed before opening it again
+    setTimeout(() => {
+      openCategoryModal();
+      setCategoryModalCallback(() => (newCategory) => {
+        console.log('Category modal callback called with:', newCategory);
+        if (callback) {
+          callback(newCategory || null);
+        }
+        closeCategoryModal();
+      });
+    }, 0); // Delay to ensure the modal is closed before reopening
+  };
+
+  const handleCloseCategoryModal = () => {
+    closeCategoryModal();
+    setAddNewCategoryOnOpen(false);
+    if (categoryModalCallback) {
+      categoryModalCallback();
+      setCategoryModalCallback(null);
+    }
   };
 
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Time Tracker</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-blue-600">Time Tracker</h1>
+        <HamburgerMenu
+          isOpen={isMenuOpen}
+          setIsOpen={setIsMenuOpen}
+          openCategoryModal={openCategoryModal}
+          intervals={intervals}
+          categories={categories}
+          setIntervals={setIntervals}
+          setCategories={setCategories}
+        />
+      </div>
 
-      <div className="flex mb-6">
-        <div className="w-full md:w-1/4 pr-0 md:pr-4 mb-4 md:mb-0">
+      <div className="flex flex-col">
+        <div className="w-full mb-6">
           <Timer 
             categories={categories.filter(cat => cat.active)} 
             addInterval={handleAddInterval}
             openEditModal={handleOpenEditModal}
-          />
-          <button 
-            onClick={openCategoryModal} 
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded mb-2"
-            aria-label="Deschide gestionarea categoriilor"
-          >
-            Categorii
-          </button>
-          <ImportExportData 
-            intervals={intervals}
-            categories={categories}
-            setIntervals={setIntervals}
-            setCategories={setCategories}
+            openCategoryModal={handleOpenCategoryModal}
           />
         </div>
-        <div className="w-full md:w-3/4 pl-0 md:pl-4">
+
+        <div className="w-full mb-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Adaugă interval</h2>
             <IntervalForm
@@ -106,35 +141,39 @@ const TimeTrackerApp = () => {
               setInterval={setNewInterval}
               categories={categories.filter(cat => cat.active)}
               onSave={handleAddInterval}
-              openAddCategoryModal={openCategoryModal}
+              openCategoryModal={handleOpenCategoryModal}
               intervals={intervals}
             />
           </div>
         </div>
-      </div>
 
-      <IntervalList 
-        intervals={intervals}
-        filter={filter}
-        setFilter={setFilter}
-        listView={listView}
-        setListView={setListView}
-        categories={categories}
-        openEditModal={openEditModal}
-        openDeleteModal={openDeleteModal}
-      />
+        <div className="w-full mb-6">
+          <IntervalList 
+            intervals={intervals}
+            filter={filter}
+            setFilter={setFilter}
+            listView={listView}
+            setListView={setListView}
+            categories={categories}
+            openEditModal={openEditModal}
+            openDeleteModal={openDeleteModal}
+          />
+        </div>
+      </div>
 
       {isEditModalOpen && (
         <IntervalForm
           interval={newInterval}
           setInterval={setNewInterval}
           categories={categories.filter(cat => cat.active)}
-          onSave={handleAddInterval}
+          onSave={handleSaveEditedInterval}
           openAddCategoryModal={openCategoryModal}
           intervals={intervals}
           isModalOpen={isEditModalOpen}
           closeModal={closeEditModal}
           filter={filter}
+          editingInterval={editingInterval}
+          openDeleteModal={openDeleteModal}
         />
       )}
 
@@ -146,10 +185,12 @@ const TimeTrackerApp = () => {
 
       <CategoryModal
         isOpen={isCategoryModalOpen}
-        onClose={closeCategoryModal}
+        onClose={handleCloseCategoryModal}
         categories={categories}
         updateCategories={updateCategories}
         intervals={intervals}
+        addNewOnOpen={addNewCategoryOnOpen}
+        directAdd={directAdd}
       />
     </div>
   );
