@@ -204,13 +204,21 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
             onAddNew={handleAddNewCategory}
           />
         </div>
-        <div>
+        <div className="flex justify-between">
           <button 
             onClick={handleSave} 
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition-colors"
           >
             Salvează
           </button>
+          {editingInterval && (
+            <button 
+              onClick={() => openDeleteModal(editingInterval)}
+              className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium hover:bg-red-600 transition-colors"
+            >
+              Șterge
+            </button>
+          )}
         </div>
       </div>
   );
