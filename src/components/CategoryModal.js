@@ -9,7 +9,7 @@ const generateId = () => {
   return `${datePart}${randomPart}`;
 };
 
-const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false, onCategorySaved }) => {
+const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false }) => {
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -56,16 +56,14 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
     }
 
     let updatedCategories;
-    let savedCategory;
     if (isEditing) {
       updatedCategories = localCategories.map(cat => 
         cat.id === editingCategory.id ? editingCategory : cat
       );
-      savedCategory = editingCategory;
       toast.success('Categoria a fost actualizată cu succes!');
     } else {
-      savedCategory = { ...editingCategory, id: generateId() };
-      updatedCategories = [...localCategories, savedCategory];
+      const newCategory = { ...editingCategory, id: generateId(), active: true };
+      updatedCategories = [...localCategories, newCategory];
       toast.success('Categoria a fost adăugată cu succes!');
     }
 
@@ -73,9 +71,6 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
     updateCategories(updatedCategories);
     setEditingCategory(null);
     setIsEditing(false);
-    
-    // Apelăm callback-ul onCategorySaved cu categoria salvată
-    onCategorySaved(savedCategory);
   };
 
   const deleteCategory = (categoryToDelete) => {
@@ -174,7 +169,7 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
           {isEditing && (
             <button
               onClick={cancelEdit}
-              className="px-4 py-2 bg-gray-300 text-gray-800 rounded"
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
             >
               Renunță
             </button>
@@ -215,7 +210,7 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
       </ul>
       <button
         onClick={onClose}
-        className="w-full px-4 py-2 bg-gray-300 text-gray-800 rounded mt-4"
+        className="px-4 py-2 bg-gray-300 text-gray-700 rounded mt-4 w-full"
       >
         Înapoi
       </button>
