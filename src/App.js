@@ -62,13 +62,21 @@ const TimeTrackerApp = () => {
   };
 
   const handleSaveEditedInterval = (updatedInterval) => {
-    if (editingInterval) {
+    if (editingInterval && editingInterval.id) {
+      // Editing an existing interval
       setIntervals(prevIntervals => prevIntervals.map(interval => 
         interval.id === editingInterval.id ? { ...updatedInterval, id: interval.id } : interval
       ));
-      closeEditModal();
-      toast.success('Interval actualizat cu succes!');
+    } else {
+      // Adding a new interval
+      const newInterval = {
+        ...updatedInterval,
+        id: `${new Date().toISOString().replace(/[-:T.]/g, '')}${Math.random().toString(36).substr(2, 6)}`
+      };
+      setIntervals(prevIntervals => [...prevIntervals, newInterval]);
     }
+    closeEditModal();
+    toast.success(editingInterval && editingInterval.id ? 'Interval actualizat cu succes!' : 'Interval adăugat cu succes!');
   };
 
   const updateCategories = (newCategories) => {
@@ -79,7 +87,6 @@ const TimeTrackerApp = () => {
 
   const handleOpenAddIntervalModal = (interval) => {
     setNewInterval(interval);
-    setEditingInterval(null);
     openEditModal(interval);
   };
 

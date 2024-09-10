@@ -8,7 +8,7 @@ export const useModals = () => {
   const [intervalToDelete, setIntervalToDelete] = useState(null);
 
   const openEditModal = (interval, index) => {
-    setEditingInterval({ ...interval, index });
+    setEditingInterval(index !== undefined ? { ...interval, index } : interval);
     setIsEditModalOpen(true);
   };
 
