@@ -14,7 +14,7 @@ const IntervalList = ({
   categories, 
   openEditModal, 
   openDeleteModal,
-  openCategoryModal
+  // openCategoryModal - removed as it's no longer needed
 }) => {
   const { filteredIntervals, totalPeriodTime } = filterIntervals(intervals, filter, listView === 'graph');
 
@@ -136,13 +136,6 @@ const IntervalList = ({
     }
   };
 
-  const handleAddNewCategory = () => {
-    openCategoryModal((newCategory) => {
-      if (newCategory && newCategory.id) {
-        setFilter(prevFilter => ({ ...prevFilter, category: newCategory.id }));
-      }
-    }, true, true);
-  };
   return (
     <div>
       {/* Cronometru și Adaugă interval rămân neschimbate */}
@@ -206,12 +199,6 @@ const IntervalList = ({
                 className="px-4 py-2 bg-blue-500 text-white rounded"
               >
                 {listView === 'table' ? 'Vizualizare grafic' : 'Vizualizare tabel'}
-              </button>
-              <button
-                onClick={handleAddNewCategory}
-                className="px-2 py-1 bg-blue-500 text-white rounded ml-2"
-              >
-                +
               </button>
             </div>
           </div>
