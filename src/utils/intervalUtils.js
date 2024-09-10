@@ -161,12 +161,9 @@ export const addInterval = (interval, intervals, categories, setIntervals, setCa
   };
   
   setIntervals(prevIntervals => [...prevIntervals, roundedInterval]);
-  
-  if (!categories.some(cat => cat.name === interval.category)) {
-    setCategories(prevCategories => [...prevCategories, { name: interval.category, active: true }]);
-  }
   return true;
 };
+
 export const deleteInterval = (index, intervals, setIntervals) => {
   setIntervals(prevIntervals => prevIntervals.filter((_, i) => i !== index));
 };
