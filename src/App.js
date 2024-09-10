@@ -98,7 +98,14 @@ const TimeTrackerApp = () => {
 
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000} 
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-blue-600">Time Tracker</h1>
         <HamburgerMenu
@@ -153,19 +160,21 @@ const TimeTrackerApp = () => {
       </div>
 
       {isEditModalOpen && (
-        <IntervalForm
-          interval={newInterval}
-          setInterval={setNewInterval}
-          categories={categories.filter(cat => cat.active)}
-          onSave={handleSaveEditedInterval}
-          openAddCategoryModal={openCategoryModal}
-          intervals={intervals}
-          isModalOpen={isEditModalOpen}
-          closeModal={closeEditModal}
-          filter={filter}
-          editingInterval={editingInterval}
-          openDeleteModal={openDeleteModal}
-        />
+        <div aria-modal="true" role="dialog">
+          <IntervalForm
+            interval={newInterval}
+            setInterval={setNewInterval}
+            categories={categories.filter(cat => cat.active)}
+            onSave={handleSaveEditedInterval}
+            openAddCategoryModal={openCategoryModal}
+            intervals={intervals}
+            isModalOpen={isEditModalOpen}
+            closeModal={closeEditModal}
+            filter={filter}
+            editingInterval={editingInterval}
+            openDeleteModal={openDeleteModal}
+          />
+        </div>
       )}
 
       <DeleteConfirmationModal

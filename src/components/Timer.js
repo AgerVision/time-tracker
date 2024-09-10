@@ -101,7 +101,14 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
             categories={categories}
             onAddNew={handleAddNewCategory}
           />
-          <button onClick={startTimer} className="w-full px-4 py-2 bg-green-500 text-white rounded">Start</button>
+          <button 
+            onClick={startTimer} 
+            className="w-full px-4 py-2 bg-green-500 text-white rounded"
+            aria-label="Start timer"
+            tabIndex={0}
+          >
+            Start
+          </button>
         </>
       ) : (
         <>
@@ -109,7 +116,14 @@ const Timer = ({ categories, addInterval, openEditModal, openCategoryModal }) =>
             <p className="font-semibold">Categorie curentă: {categories.find(cat => cat.id === currentCategoryId)?.name}</p>
             <p>Început la: {startTime.toLocaleTimeString()}</p>
           </div>
-          <button onClick={stopTimer} className="w-full px-4 py-2 bg-red-500 text-white rounded">Stop</button>
+          <button 
+            onClick={stopTimer} 
+            className="w-full px-4 py-2 bg-red-500 text-white rounded"
+            aria-label="Stop timer"
+            tabIndex={0}
+          >
+            Stop
+          </button>
         </>
       )}
       <p className="mt-4 text-sm text-gray-600">
