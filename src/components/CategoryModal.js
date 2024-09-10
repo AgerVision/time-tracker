@@ -9,7 +9,17 @@ const generateId = () => {
   return `${datePart}${randomPart}`;
 };
 
-const CategoryModal = ({ isOpen, onClose, categories, updateCategories, intervals, addNewOnOpen, directAdd = false, onCategorySaved }) => {
+const CategoryModal = ({ 
+  isOpen, 
+  onClose, 
+  categories, 
+  updateCategories, 
+  intervals, 
+  addNewOnOpen, 
+  directAdd = false, 
+  onCategorySaved,
+  autoCloseOnSave = true // Add this new prop
+}) => {
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -75,9 +85,13 @@ const CategoryModal = ({ isOpen, onClose, categories, updateCategories, interval
     if (onCategorySaved) {
       onCategorySaved(savedCategory);
     }
-    setEditingCategory(null);
-    setIsEditing(false);
-    onClose();
+    
+    if (autoCloseOnSave) {
+      onClose();
+    } else {
+      setEditingCategory(null);
+      setIsEditing(false);
+    }
   };
 
   const deleteCategory = (categoryToDelete) => {

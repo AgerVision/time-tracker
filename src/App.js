@@ -21,15 +21,12 @@ const TimeTrackerApp = () => {
 
   const { 
     isEditModalOpen, isDeleteModalOpen, isCategoryModalOpen,
-    editingInterval, intervalToDelete, openEditModal, closeEditModal,
-    openDeleteModal, closeDeleteModal, openCategoryModal, closeCategoryModal,
-    setEditingInterval
+    editingInterval, intervalToDelete, categoryModalConfig,
+    openEditModal, closeEditModal, openDeleteModal, closeDeleteModal,
+    openCategoryModal, closeCategoryModal, setEditingInterval
   } = useModals();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [categoryModalCallback, setCategoryModalCallback] = useState(null);
-  const [addNewCategoryOnOpen, setAddNewCategoryOnOpen] = useState(false);
-  const [directAdd, setDirectAdd] = useState(false);
 
   useLocalStorage(intervals, categories);
 
@@ -96,21 +93,6 @@ const TimeTrackerApp = () => {
     openEditModal(interval);
   };
 
-  const handleOpenCategoryModal = (callback, addNew = false, directAdd = false) => {
-    console.log('Opening category modal, addNew:', addNew, 'directAdd:', directAdd);
-    setAddNewCategoryOnOpen(addNew);
-    setDirectAdd(directAdd);
-    setCategoryModalCallback(() => callback);
-    openCategoryModal();
-  };
-
-  const handleCloseCategoryModal = () => {
-    closeCategoryModal();
-    setAddNewCategoryOnOpen(false);
-    setDirectAdd(false);
-    setCategoryModalCallback(null);
-  };
-
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
       <ToastContainer 
@@ -141,7 +123,7 @@ const TimeTrackerApp = () => {
             categories={categories.filter(cat => cat.active)} 
             addInterval={handleAddInterval}
             openAddIntervalModal={handleOpenAddIntervalModal}
-            openCategoryModal={handleOpenCategoryModal}
+            openCategoryModal={openCategoryModal}
           />
         </div>
 
@@ -153,7 +135,7 @@ const TimeTrackerApp = () => {
               setInterval={setNewInterval}
               categories={categories.filter(cat => cat.active)}
               onSave={handleAddInterval}
-              openCategoryModal={handleOpenCategoryModal}
+              openCategoryModal={openCategoryModal}
               intervals={intervals}
             />
           </div>
@@ -169,7 +151,7 @@ const TimeTrackerApp = () => {
             categories={categories}
             openEditModal={openEditModal}
             openDeleteModal={openDeleteModal}
-            openCategoryModal={handleOpenCategoryModal}  // Add this line
+            openCategoryModal={openCategoryModal}  // Add this line
           />
         </div>
       </div>
@@ -200,18 +182,14 @@ const TimeTrackerApp = () => {
 
       <CategoryModal
         isOpen={isCategoryModalOpen}
-        onClose={handleCloseCategoryModal}
+        onClose={closeCategoryModal}
         categories={categories}
         updateCategories={updateCategories}
         intervals={intervals}
-        addNewOnOpen={addNewCategoryOnOpen}
-        directAdd={directAdd}
-        onCategorySaved={(newCategory) => {
-          if (categoryModalCallback) {
-            categoryModalCallback(newCategory);
-          }
-          handleCloseCategoryModal();
-        }}
+        addNewOnOpen={categoryModalConfig.addNewOnOpen}
+        directAdd={categoryModalConfig.directAdd}
+        onCategorySaved={categoryModalConfig.onSave}
+        autoCloseOnSave={categoryModalConfig.autoCloseOnSave}
       />
     </div>
   );

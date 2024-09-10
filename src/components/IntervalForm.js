@@ -67,7 +67,7 @@ const IntervalForm = ({ interval, setInterval, categories, onSave, openCategoryM
         console.log('New category added:', newCategory);
         setLocalInterval(prev => ({...prev, categoryId: newCategory.id}));
       }
-    }, true, true);
+    }, true, true); // autoCloseOnSave is true by default
   };
 
   const isOverlapping = (newInterval) => {

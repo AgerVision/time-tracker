@@ -15,6 +15,11 @@ const HamburgerMenu = ({
     setIsOpen(false);
   };
 
+  const handleOpenCategoryModal = () => {
+    openCategoryModal(null, false, false, false); // Set autoCloseOnSave to false
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative">
       <button
@@ -30,7 +35,7 @@ const HamburgerMenu = ({
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-blue-500 rounded-md shadow-lg overflow-hidden z-10 flex flex-col">
           <button
-            onClick={() => handleMenuItemClick(openCategoryModal)}
+            onClick={handleOpenCategoryModal}
             className="w-full px-4 py-2 text-white text-center hover:bg-blue-600 transition-colors duration-200"
           >
             Categorii

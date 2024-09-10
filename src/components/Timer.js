@@ -85,7 +85,7 @@ const Timer = ({ categories, addInterval, openAddIntervalModal, openCategoryModa
       if (newCategory && newCategory.id) {
         setCurrentCategoryId(newCategory.id);
       }
-    }, true, true);
+    }, true, true); // autoCloseOnSave is true by default
   };
 
   return (

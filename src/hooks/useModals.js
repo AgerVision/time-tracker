@@ -6,6 +6,12 @@ export const useModals = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingInterval, setEditingInterval] = useState(null);
   const [intervalToDelete, setIntervalToDelete] = useState(null);
+  const [categoryModalConfig, setCategoryModalConfig] = useState({
+    onSave: null,
+    addNewOnOpen: false,
+    directAdd: false,
+    autoCloseOnSave: true
+  });
 
   const openEditModal = (interval, index) => {
     setEditingInterval(index !== undefined ? { ...interval, index } : interval);
@@ -27,12 +33,19 @@ export const useModals = () => {
     setIsDeleteModalOpen(false);
   };
 
-  const openCategoryModal = () => {
+  const openCategoryModal = (onSave, addNewOnOpen = false, directAdd = false, autoCloseOnSave = true) => {
+    setCategoryModalConfig({ onSave, addNewOnOpen, directAdd, autoCloseOnSave });
     setIsCategoryModalOpen(true);
   };
 
   const closeCategoryModal = () => {
     setIsCategoryModalOpen(false);
+    setCategoryModalConfig({
+      onSave: null,
+      addNewOnOpen: false,
+      directAdd: false,
+      autoCloseOnSave: true
+    });
   };
 
   return {
@@ -41,6 +54,7 @@ export const useModals = () => {
     isCategoryModalOpen,
     editingInterval,
     intervalToDelete,
+    categoryModalConfig,
     openEditModal,
     closeEditModal,
     openDeleteModal,
