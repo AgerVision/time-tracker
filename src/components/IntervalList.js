@@ -1,9 +1,10 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, LabelList } from 'recharts';
 import { filterIntervals, groupIntervals, formatDuration } from '../utils/intervalUtils';
-import { differenceInMinutes } from 'date-fns';
+import { differenceInMinutes, differenceInDays, parseISO } from 'date-fns';
 import { formatTimeWithoutSeconds } from '../utils/intervalUtils';
 import { format, isSameDay } from 'date-fns';
+import { useLocation } from 'react-router-dom';
 
 const IntervalList = ({ 
   intervals, 
@@ -14,9 +15,17 @@ const IntervalList = ({
   categories, 
   openEditModal, 
   openDeleteModal,
-  // openCategoryModal - removed as it's no longer needed
 }) => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const forceTable = searchParams.get('table') === 'force';
+
   const { filteredIntervals, totalPeriodTime } = filterIntervals(intervals, filter, listView === 'graph');
+
+  // Calculate the number of days in the filtered interval
+  const fromDate = parseISO(filter.fromDate);
+  const toDate = parseISO(filter.toDate);
+  const totalDays = differenceInDays(toDate, fromDate) + 1; // +1 to include both start and end dates
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -55,14 +64,16 @@ const IntervalList = ({
     .map(([category, data]) => ({
       name: category,
       value: data.totalTime,
-      hours: (data.totalTime / 60).toFixed(1)
+      hours: (data.totalTime / 60).toFixed(1),
+      avgHoursPerDay: (data.totalTime / 60 / totalDays).toFixed(1)
     }));
 
   if (unallocatedTime > 0) {
     chartData.push({
       name: 'Nealocat',
       value: unallocatedTime,
-      hours: (unallocatedTime / 60).toFixed(1)
+      hours: (unallocatedTime / 60).toFixed(1),
+      avgHoursPerDay: (unallocatedTime / 60 / totalDays).toFixed(1)
     });
   }
 
@@ -70,9 +81,12 @@ const IntervalList = ({
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
         <div className="bg-white border p-2 shadow-md">
-          <p>{`${payload[0].payload.name}: ${payload[0].payload.hours} ore`}</p>
+          <p>{`${data.name}`}</p>
+          <p>{`Total: ${data.hours} ore`}</p>
+          {totalDays > 1 && <p>{`Medie/zi: ${data.avgHoursPerDay} ore`}</p>}
         </div>
       );
     }
@@ -96,6 +110,32 @@ const IntervalList = ({
   };
 
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#45B39D', '#F4D03F', '#DC7633', '#5DADE2', '#48C9B0', '#F5B041', '#EC7063'];
+
+  const CustomLabel = ({ x, y, width, height, value, index }) => {
+    const entry = chartData[index];
+    const hours = entry ? parseFloat(entry.hours).toFixed(1) : '0.0';
+    const avgPerDay = totalDays > 1 ? `(${parseFloat(entry.avgHoursPerDay).toFixed(1)})` : '';
+
+    return (
+      <text 
+        x={x + width + 5} 
+        y={y + height / 2} 
+        dy={avgPerDay ? -4 : 0.15 * height} // Adjust dy for vertical centering
+        fill="#333" 
+        fontSize={14} 
+        textAnchor="start"
+      >
+        {hours}
+        {avgPerDay && (
+          <tspan x={x + width + 5} dy={16}>
+            {avgPerDay}
+          </tspan>
+        )}
+      </text>
+    );
+  };
+
+  const chartLabel = totalDays > 1 ? 'Format: Total ore (Medie ore/zi)' : 'Format: Total ore';
 
   return (
     <div>
@@ -167,12 +207,14 @@ const IntervalList = ({
         
         {listView === 'graph' && chartData.length > 0 && (
           <div className="mt-4 mb-8">
-            <h3 className="text-center mb-2 font-semibold">Durata (ore)</h3>
+            <p className="text-center text-sm text-gray-600 mb-2">
+              {chartLabel}
+            </p>
             <ResponsiveContainer width="100%" height={chartData.length * 40 + 40}>
               <BarChart
                 layout="vertical"
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                margin={{ top: 5, right: 35, left: 0, bottom: 5 }}
               >
                 <XAxis type="number" hide={true} />
                 <YAxis 
@@ -184,18 +226,14 @@ const IntervalList = ({
                   tickLine={false}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="value" 
-                  background={{ fill: '#eee' }}
-                >
+                <Bar dataKey="value">
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                   <LabelList 
                     dataKey="hours" 
                     position="right" 
-                    formatter={(value) => `${value}`}
-                    style={{ fontSize: 14, fill: '#333' }}
+                    content={<CustomLabel />}
                   />
                 </Bar>
               </BarChart>
@@ -203,55 +241,57 @@ const IntervalList = ({
           </div>
         )}
         
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="border p-2 text-left">Interval</th>
-                <th className="border p-2 text-left">Categorie</th>
-                <th className="border p-2 text-left">Durată</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredIntervals.map((interval, index) => (
-                <tr key={index} className={interval.categoryId === 'Unallocated' ? 'bg-gray-100' : ''}>
-                  <td className="border p-2">
-                    <div className="text-sm">
-                      {listView === 'table' ? (
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            openEditModal(interval);
-                          }}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {formatDateTimeCompact(
-                            interval.startDate, 
-                            interval.startTime, 
-                            interval.endDate, 
-                            interval.endTime
-                          )}
-                        </a>
-                      ) : (
-                        <span>
-                          {formatDateTimeCompact(
-                            interval.startDate, 
-                            interval.startTime, 
-                            interval.endDate, 
-                            interval.endTime
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="border p-2">{getCategoryName(interval.categoryId)}</td>
-                  <td className="border p-2">{formatDuration(calculateDuration(interval))}</td>
+        {(listView === 'table' || (listView === 'graph' && forceTable)) && (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="border p-2 text-left">Interval</th>
+                  <th className="border p-2 text-left">Categorie</th>
+                  <th className="border p-2 text-left">Durată</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredIntervals.map((interval, index) => (
+                  <tr key={index} className={interval.categoryId === 'Unallocated' ? 'bg-gray-100' : ''}>
+                    <td className="border p-2">
+                      <div className="text-sm">
+                        {listView === 'table' ? (
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              openEditModal(interval);
+                            }}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {formatDateTimeCompact(
+                              interval.startDate, 
+                              interval.startTime, 
+                              interval.endDate, 
+                              interval.endTime
+                            )}
+                          </a>
+                        ) : (
+                          <span>
+                            {formatDateTimeCompact(
+                              interval.startDate, 
+                              interval.startTime, 
+                              interval.endDate, 
+                              interval.endTime
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="border p-2">{getCategoryName(interval.categoryId)}</td>
+                    <td className="border p-2">{formatDuration(calculateDuration(interval))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
