@@ -7,16 +7,18 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
     const filterFromDate = new Date(`${fromDate}T00:00:00Z`);
     const filterToDate = new Date(`${toDate}T23:59:59.999Z`);
 
-    // Modificăm condiția pentru a exclude intervalele care se termină exact la miezul nopții zilei de început
-    return (start < filterToDate && end > filterFromDate);
+    // Include intervals that end exactly at midnight of the next day
+    return (start < filterToDate && (end > filterFromDate || end.getTime() === filterToDate.getTime() + 1));
   };
 
   const splitIntervalsByDay = (interval) => {
     let start = new Date(`${interval.startDate}T${interval.startTime}Z`);
     const end = new Date(`${interval.endDate}T${interval.endTime}Z`);
 
-    // Check if the interval ends on the same day
-    if (start.toUTCString().split('T')[0] === end.toUTCString().split('T')[0]) {
+    // Check if the interval ends on the same day or at midnight of the next day
+    if (start.toUTCString().split('T')[0] === end.toUTCString().split('T')[0] ||
+        (end.getUTCHours() === 0 && end.getUTCMinutes() === 0 && end.getUTCSeconds() === 0 && 
+         new Date(end.getTime() - 1).toUTCString().split('T')[0] === start.toUTCString().split('T')[0])) {
       return [interval]; // Return the original interval
     }
 
@@ -45,17 +47,15 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
     }
 
     // Add the last interval
-    if (currentEndDate > end) {
-      currentEndDate = end;
-      result.push({
-        ...interval,
-        startDate: currentStartDate.toISOString().split('T')[0],
-        startTime: currentStartDate.toISOString().split('T')[1].slice(0, 8),
-        endDate: currentEndDate.toISOString().split('T')[0],
-        endTime: currentEndDate.toISOString().split('T')[1].slice(0, 8),
-        duration: calculateDuration(currentStartDate, currentEndDate)
-      });
-    }
+    result.push({
+      ...interval,
+      startDate: currentStartDate.toISOString().split('T')[0],
+      startTime: currentStartDate.toISOString().split('T')[1].slice(0, 8),
+      endDate: end.toISOString().split('T')[0],
+      endTime: end.toISOString().split('T')[1].slice(0, 8),
+      duration: calculateDuration(currentStartDate, end)
+    });
+
     return result;
   };
 
@@ -74,8 +74,8 @@ export const filterIntervals = (intervals, filter, splitOverMidnight = false) =>
       return splitIntervals.filter(splitInterval => {
         const start = new Date(`${splitInterval.startDate}T${splitInterval.startTime}Z`);
         const end = new Date(`${splitInterval.endDate}T${splitInterval.endTime}Z`);
-        // Folosim aceeași logică de filtrare și pentru intervalele splituite
-        return (start < filterToDate && end > filterFromDate) &&
+        // Include intervals that end exactly at midnight of the next day
+        return (start < filterToDate && (end > filterFromDate || end.getTime() === filterToDate.getTime() + 1)) &&
                (filter.category === 'all' || splitInterval.categoryId === filter.category);
       });
     });
