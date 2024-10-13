@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, LabelList } from 'recharts';
 import { filterIntervals, groupIntervals, formatDuration } from '../utils/intervalUtils';
 import { differenceInMinutes } from 'date-fns';
 import { formatTimeWithoutSeconds } from '../utils/intervalUtils';
@@ -54,70 +54,29 @@ const IntervalList = ({
   const chartData = Object.entries(groupedIntervals)
     .map(([category, data]) => ({
       name: category,
-      value: data.totalTime
+      value: data.totalTime,
+      hours: (data.totalTime / 60).toFixed(1)
     }));
 
   if (unallocatedTime > 0) {
     chartData.push({
       name: 'Nealocat',
-      value: unallocatedTime
+      value: unallocatedTime,
+      hours: (unallocatedTime / 60).toFixed(1)
     });
   }
 
-  // Sort chart data by value in descending order
   chartData.sort((a, b) => b.value - a.value);
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#a4de6c', '#d0ed57', '#cccccc'];
-
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    // Afișăm eticheta doar dacă procentul este mai mare de 5%
-    if (percent < 0.05) return null;
-
-    return (
-      <g>
-        <text 
-          x={x} 
-          y={y-10} 
-          fill="black" 
-          textAnchor="middle" 
-          dominantBaseline="central"
-          className="text-xs md:text-sm font-semibold"
-        >
-          {name}
-        </text>
-        <text 
-          x={x} 
-          y={y+10} 
-          fill="black" 
-          textAnchor="middle" 
-          dominantBaseline="central"
-          className="text-xs md:text-sm"
-        >
-          {formatDuration(chartData[index].value)}
-        </text>
-      </g>
-    );
-  };
-  const renderLegend = (props) => {
-    const { payload } = props;
-
-    return (
-      <ul className="list-none p-0 mt-4 flex flex-wrap justify-center">
-        {payload.map((entry, index) => (
-          <li key={`item-${index}`} className="mr-4 mb-2">
-            <span className="inline-block w-3 h-3 mr-1" style={{ backgroundColor: entry.color }}></span>
-            <span className="text-sm">
-              {entry.value}: {formatDuration(entry.payload.value)}
-            </span>
-          </li>
-        ))}
-      </ul>
-    );
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white border p-2 shadow-md">
+          <p>{`${payload[0].payload.name}: ${payload[0].payload.hours} ore`}</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Sort categories alphabetically
@@ -135,6 +94,8 @@ const IntervalList = ({
       return `${format(start, 'dd.MM.yyyy HH:mm')} - ${format(end, 'dd.MM.yyyy HH:mm')}`;
     }
   };
+
+  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#45B39D', '#F4D03F', '#DC7633', '#5DADE2', '#48C9B0', '#F5B041', '#EC7063'];
 
   return (
     <div>
@@ -206,27 +167,38 @@ const IntervalList = ({
         
         {listView === 'graph' && chartData.length > 0 && (
           <div className="mt-4 mb-8">
-            <ResponsiveContainer width="100%" height={400}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderCustomizedLabel}
-                  outerRadius="80%"
-                  fill="#8884d8"
-                  dataKey="value"
+            <h3 className="text-center mb-2 font-semibold">Durata (ore)</h3>
+            <ResponsiveContainer width="100%" height={chartData.length * 40 + 40}>
+              <BarChart
+                layout="vertical"
+                data={chartData}
+                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+              >
+                <XAxis type="number" hide={true} />
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  width={window.innerWidth * 0.3}
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar 
+                  dataKey="value" 
+                  background={{ fill: '#eee' }}
                 >
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Nealocat' ? '#cccccc' : COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value, name) => [formatDuration(value), name]}
-                />
-                <Legend content={renderLegend} />
-              </PieChart>
+                  <LabelList 
+                    dataKey="hours" 
+                    position="right" 
+                    formatter={(value) => `${value}`}
+                    style={{ fontSize: 14, fill: '#333' }}
+                  />
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
