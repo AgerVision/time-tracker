@@ -137,6 +137,32 @@ const IntervalList = ({
 
   const chartLabel = totalDays > 1 ? 'Format: Total ore (Medie ore/zi)' : 'Format: Total ore';
 
+  const wrapText = (text, maxWidth) => {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+      const word = words[i];
+      const width = getTextWidth(currentLine + " " + word);
+      if (width < maxWidth) {
+        currentLine += " " + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    lines.push(currentLine);
+    return lines;
+  };
+
+  const getTextWidth = (text) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = '14px Arial'; // Make sure this matches the font in your chart
+    return context.measureText(text).width;
+  };
+
   return (
     <div>
       {/* Cronometru și Adaugă interval rămân neschimbate */}
@@ -210,18 +236,50 @@ const IntervalList = ({
             <p className="text-center text-sm text-gray-600 mb-2">
               {chartLabel}
             </p>
-            <ResponsiveContainer width="100%" height={chartData.length * 40 + 40}>
+            <ResponsiveContainer width="100%" height={chartData.length * 50 + 40}>
               <BarChart
                 layout="vertical"
                 data={chartData}
-                margin={{ top: 5, right: 35, left: 0, bottom: 5 }}
+                margin={{ top: 5, right: 40, left: 0, bottom: 5 }}
               >
                 <XAxis type="number" hide={true} />
                 <YAxis 
                   type="category" 
                   dataKey="name" 
                   width={window.innerWidth * 0.3}
-                  tick={{ fontSize: 12 }}
+                  tick={(props) => {
+                    const { x, y, payload } = props;
+                    const maxLength = 15; // Adjust this value as needed
+                    let lines = [];
+                    
+                    if (payload.value.length > maxLength) {
+                      const midpoint = Math.ceil(payload.value.length / 2);
+                      lines = [
+                        payload.value.slice(0, midpoint),
+                        payload.value.slice(midpoint)
+                      ];
+                    } else {
+                      lines = [payload.value];
+                    }
+
+                    return (
+                      <g>
+                        {lines.map((line, index) => (
+                          <text
+                            key={index}
+                            x={x}
+                            y={y}
+                            dy={index * 16 - 8} // Adjust vertical positioning
+                            textAnchor="end"
+                            fill="#666"
+                            fontSize={14}
+                          >
+                            {line}
+                          </text>
+                        ))}
+                      </g>
+                    );
+                  }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -254,7 +312,7 @@ const IntervalList = ({
               <tbody>
                 {filteredIntervals.map((interval, index) => (
                   <tr key={index} className={interval.categoryId === 'Unallocated' ? 'bg-gray-100' : ''}>
-                    <td className="border p-2">
+                    <td className="border p-2 whitespace-normal max-w-xs">
                       <div className="text-sm">
                         {listView === 'table' ? (
                           <a
@@ -284,7 +342,7 @@ const IntervalList = ({
                         )}
                       </div>
                     </td>
-                    <td className="border p-2">{getCategoryName(interval.categoryId)}</td>
+                    <td className="border p-2 break-all">{getCategoryName(interval.categoryId)}</td>
                     <td className="border p-2">{formatDuration(calculateDuration(interval))}</td>
                   </tr>
                 ))}
