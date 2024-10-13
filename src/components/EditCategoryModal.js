@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 
-const EditCategoryModal = ({ isOpen, onClose, category, onSave, categories }) => {
+const EditCategoryModal = ({ isOpen, onClose, category, onSave, categories, intervals, onDelete }) => {
   const [editedCategory, setEditedCategory] = useState({ name: '', active: true, id: '' });
   const [isNewCategory, setIsNewCategory] = useState(false);
 
@@ -40,6 +40,17 @@ const EditCategoryModal = ({ isOpen, onClose, category, onSave, categories }) =>
 
     onSave(editedCategory);
     onClose();
+  };
+
+  const handleDelete = () => {
+    const isCategoryUsed = intervals.some(interval => interval.categoryId === editedCategory.id);
+    
+    if (isCategoryUsed) {
+      toast.error('Nu se poate șterge o categorie utilizată în intervale!');
+    } else {
+      onDelete(editedCategory);
+      onClose();
+    }
   };
 
   return (
@@ -104,18 +115,26 @@ const EditCategoryModal = ({ isOpen, onClose, category, onSave, categories }) =>
           />
           <label>Activ</label>
         </div>
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-between space-x-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+          >
+            Înapoi
+          </button>
+          {!isNewCategory && (
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-500 text-white rounded"
+            >
+              Șterge
+            </button>
+          )}
           <button
             onClick={handleSave}
             className="px-4 py-2 bg-blue-500 text-white rounded"
           >
             {isNewCategory ? 'Adaugă' : 'Salvează'}
-          </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
-          >
-            Anulează
           </button>
         </div>
       </div>

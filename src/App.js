@@ -141,14 +141,22 @@ const TimeTrackerApp = () => {
       cat.id === editedCategory.id ? editedCategory : cat
     );
     
-    // Dacă este o categorie nouă, o adăugăm la listă
+    // If it's a new category, add it to the list
     if (!categories.find(cat => cat.id === editedCategory.id)) {
       updatedCategories.push(editedCategory);
     }
     
     setCategories(updatedCategories);
-    updateCategories(updatedCategories); // Actualizează în localStorage sau unde stocați categoriile
+    updateCategories(updatedCategories);
     toast.success(editedCategory.id ? 'Categoria a fost actualizată cu succes!' : 'Categoria a fost adăugată cu succes!');
+    closeEditCategoryModal();
+  };
+
+  const handleDeleteCategory = (categoryToDelete) => {
+    const updatedCategories = categories.filter(cat => cat.id !== categoryToDelete.id);
+    setCategories(updatedCategories);
+    updateCategories(updatedCategories);
+    toast.success('Categoria a fost ștearsă cu succes!');
     closeEditCategoryModal();
   };
 
@@ -261,6 +269,8 @@ const TimeTrackerApp = () => {
         category={categoryToEdit}
         onSave={handleSaveCategory}
         categories={categories}
+        intervals={intervals}
+        onDelete={handleDeleteCategory}
       />
     </div>
   );

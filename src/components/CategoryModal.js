@@ -43,30 +43,9 @@ const CategoryModal = ({
     openEditCategoryModal(category);
   };
 
-  const deleteCategory = (categoryToDelete) => {
-    const isCategoryUsed = intervals.some(interval => interval.categoryId === categoryToDelete.id);
-    
-    if (isCategoryUsed) {
-      toast.error('Nu se poate șterge o categorie utilizată în intervale!');
-    } else {
-      const updatedCategories = localCategories.filter(cat => cat.id !== categoryToDelete.id);
-      setLocalCategories(updatedCategories);
-      updateCategories(updatedCategories);
-      toast.success('Categoria a fost ștearsă cu succes!');
-    }
-  };
-
-  const toggleShowOnlyActive = () => {
-    setShowOnlyActive(!showOnlyActive);
-  };
-
-  const filteredCategories = showOnlyActive
-    ? localCategories.filter(cat => cat.active)
-    : localCategories;
-
-  const sortedCategories = [...filteredCategories].sort((a, b) => 
-    a.name.localeCompare(b.name, 'ro', { sensitivity: 'base' })
-  );
+  const sortedCategories = [...localCategories]
+    .filter(cat => !showOnlyActive || cat.active)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ro', { sensitivity: 'base' }));
 
   return (
     <Modal
@@ -75,14 +54,13 @@ const CategoryModal = ({
       contentLabel="Categorii"
       className="modal"
       overlayClassName="overlay"
-      ariaHideApp={false}
       style={{
         overlay: {
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1001,
+          zIndex: 1000,
           position: 'fixed',
           top: 0,
           left: 0,
@@ -102,57 +80,58 @@ const CategoryModal = ({
           borderRadius: '4px',
           outline: 'none',
           padding: '20px',
-          maxWidth: '400px',
+          maxWidth: '500px',
           width: '90%',
-          maxHeight: '90vh',
-        }
+          maxHeight: '80vh',
+          display: 'flex',
+          flexDirection: 'column',
+        },
       }}
     >
-      <h2 className="text-xl font-semibold mb-4">Categorii</h2>
+      <h2 className="text-2xl font-semibold mb-4">Categorii</h2>
+      
       <div className="mb-4">
         <label className="flex items-center">
           <input
             type="checkbox"
             checked={showOnlyActive}
-            onChange={toggleShowOnlyActive}
+            onChange={(e) => setShowOnlyActive(e.target.checked)}
             className="mr-2"
           />
           Arată doar categoriile active
         </label>
       </div>
-      <ul className="space-y-2 mb-4">
+      
+      <ul className="overflow-auto flex-grow mb-4">
         {sortedCategories.map((category) => (
-          <li key={category.id} className="flex justify-between items-center">
-            <span>{category.name}</span>
-            <div>
-              <button
-                onClick={() => editCategory(category)}
-                className="px-2 py-1 bg-gray-200 rounded mr-2"
-              >
-                Editează
-              </button>
-              <button
-                onClick={() => deleteCategory(category)}
-                className="px-2 py-1 bg-red-500 text-white rounded"
-              >
-                Șterge
-              </button>
-            </div>
+          <li key={category.id} className="mb-2">
+            <button
+              onClick={() => editCategory(category)}
+              className="w-full text-left hover:bg-gray-100 p-2 rounded transition-colors cursor-pointer flex items-center"
+            >
+              <span>{category.name}</span>
+              <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </li>
         ))}
       </ul>
-      <button
-        onClick={addNewCategory}
-        className="px-4 py-2 bg-blue-500 text-white rounded mb-4 w-full"
-      >
-        Adaugă Categorie Nouă
-      </button>
-      <button
-        onClick={onClose}
-        className="px-4 py-2 bg-gray-300 text-gray-700 rounded mt-4 w-full"
-      >
-        Înapoi
-      </button>
+      
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+        >
+          Înapoi
+        </button>
+        <button
+          onClick={addNewCategory}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Adaugă categorie nouă
+        </button>
+      </div>
     </Modal>
   );
 };
