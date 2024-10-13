@@ -74,6 +74,16 @@ const TimeTrackerApp = () => {
     }
     closeEditModal();
     toast.success(editingInterval && editingInterval.id ? 'Interval actualizat cu succes!' : 'Interval adăugat cu succes!');
+
+    // Update the newInterval state with the end time of the just-added interval
+    const endTime = new Date(`${updatedInterval.endDate}T${updatedInterval.endTime}`);
+    setNewInterval({
+      startDate: endTime.toISOString().split('T')[0],
+      startTime: endTime.toTimeString().split(' ')[0].slice(0, 5),
+      endDate: endTime.toISOString().split('T')[0],
+      endTime: endTime.toTimeString().split(' ')[0].slice(0, 5),
+      category: ''
+    });
   };
 
   const updateCategories = (newCategories) => {
@@ -82,8 +92,15 @@ const TimeTrackerApp = () => {
     localStorage.setItem('categories', JSON.stringify(newCategories));
   };
 
-  const handleOpenAddIntervalModal = (interval) => {
-    setNewInterval(interval);
+  const handleOpenAddIntervalModal = (interval, endTime) => {
+    const nextStartTime = endTime || new Date();
+    setNewInterval({
+      ...interval,
+      startDate: nextStartTime.toISOString().split('T')[0],
+      startTime: nextStartTime.toTimeString().split(' ')[0].slice(0, 5),
+      endDate: nextStartTime.toISOString().split('T')[0],
+      endTime: nextStartTime.toTimeString().split(' ')[0].slice(0, 5),
+    });
     openEditModal(interval);
   };
 

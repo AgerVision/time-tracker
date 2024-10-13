@@ -61,7 +61,7 @@ const Timer = ({ categories, addInterval, openAddIntervalModal, openCategoryModa
     };
     
     console.log('Stopping timer, about to open add interval modal');
-    openAddIntervalModal(newInt);
+    openAddIntervalModal(newInt, roundedEndTime);
     resetTimer();
   };
 
