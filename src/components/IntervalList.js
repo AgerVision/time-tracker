@@ -45,7 +45,7 @@ const IntervalList = ({
 
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.name : 'Unknown';
+    return category ? category.name : 'Necunoscută';
   };
 
   const calculateDuration = (interval) => {
