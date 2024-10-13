@@ -12,6 +12,10 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { addInterval, deleteInterval, saveEditedInterval } from './utils/intervalUtils';
 import ImportExportData from './components/ImportExportData';
 import HamburgerMenu from './components/HamburgerMenu';
+import EditCategoryModal from './components/EditCategoryModal';
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root'); // or whatever your root element id is
 
 const TimeTrackerApp = () => {
   const { 
@@ -23,7 +27,8 @@ const TimeTrackerApp = () => {
     isEditModalOpen, isDeleteModalOpen, isCategoryModalOpen,
     editingInterval, intervalToDelete, categoryModalConfig,
     openEditModal, closeEditModal, openDeleteModal, closeDeleteModal,
-    openCategoryModal, closeCategoryModal, setEditingInterval
+    openCategoryModal, closeCategoryModal, setEditingInterval,
+    isEditCategoryModalOpen, categoryToEdit, openEditCategoryModal, closeEditCategoryModal
   } = useModals();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -109,6 +114,46 @@ const TimeTrackerApp = () => {
     setEditingInterval(interval);
     openEditModal(interval);
   };
+
+  const handleOpenEditCategoryModal = (category) => {
+    closeCategoryModal();
+    openEditCategoryModal(category);
+  };
+
+  const handleCloseEditCategoryModal = () => {
+    closeEditCategoryModal();
+    openCategoryModal();  // Reopen the category list modal
+  };
+
+  const handleSaveEditedCategory = (editedCategory) => {
+    console.log('Saving edited category:', editedCategory);
+    const updatedCategories = categories.map(cat => 
+      cat.id === editedCategory.id ? editedCategory : cat
+    );
+    setCategories(updatedCategories);
+    updateCategories(updatedCategories);
+    toast.success('Categoria a fost actualizată cu succes!');
+    handleCloseEditCategoryModal();
+  };
+
+  const handleSaveCategory = (editedCategory) => {
+    const updatedCategories = categories.map(cat =>
+      cat.id === editedCategory.id ? editedCategory : cat
+    );
+    
+    // Dacă este o categorie nouă, o adăugăm la listă
+    if (!categories.find(cat => cat.id === editedCategory.id)) {
+      updatedCategories.push(editedCategory);
+    }
+    
+    setCategories(updatedCategories);
+    updateCategories(updatedCategories); // Actualizează în localStorage sau unde stocați categoriile
+    toast.success(editedCategory.id ? 'Categoria a fost actualizată cu succes!' : 'Categoria a fost adăugată cu succes!');
+    closeEditCategoryModal();
+  };
+
+  console.log('Is Edit Category Modal Open:', isEditCategoryModalOpen);
+  console.log('Category to Edit:', categoryToEdit);
 
   return (
     <div className="container mx-auto p-4 bg-gray-100 min-h-screen">
@@ -207,6 +252,15 @@ const TimeTrackerApp = () => {
         directAdd={categoryModalConfig.directAdd}
         onCategorySaved={categoryModalConfig.onSave}
         autoCloseOnSave={categoryModalConfig.autoCloseOnSave}
+        openEditCategoryModal={handleOpenEditCategoryModal}
+      />
+
+      <EditCategoryModal
+        isOpen={isEditCategoryModalOpen}
+        onClose={handleCloseEditCategoryModal}
+        category={categoryToEdit}
+        onSave={handleSaveCategory}
+        categories={categories}
       />
     </div>
   );

@@ -18,12 +18,11 @@ const CategoryModal = ({
   addNewOnOpen, 
   directAdd = false, 
   onCategorySaved,
-  autoCloseOnSave = true // Add this new prop
+  autoCloseOnSave = true,
+  openEditCategoryModal
 }) => {
   const [localCategories, setLocalCategories] = useState(categories);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showInactive, setShowInactive] = useState(false);
+  const [showOnlyActive, setShowOnlyActive] = useState(true);
 
   useEffect(() => {
     setLocalCategories(categories);
@@ -32,70 +31,22 @@ const CategoryModal = ({
   useEffect(() => {
     if (isOpen && addNewOnOpen) {
       addNewCategory();
-    } else if (!isOpen) {
-      setEditingCategory(null);
-      setIsEditing(false);
     }
   }, [isOpen, addNewOnOpen]);
 
   const addNewCategory = () => {
-    setEditingCategory({ name: '', active: true, id: '' });
-    setIsEditing(false);
+    const newCategory = { id: generateId(), name: '', active: true };
+    openEditCategoryModal(newCategory);
   };
 
   const editCategory = (category) => {
-    setEditingCategory({ ...category });
-    setIsEditing(true);
-  };
-
-  const saveCategory = () => {
-    if (!editingCategory) return;
-
-    if (editingCategory.name.trim() === '') {
-      toast.error('Numele categoriei nu poate fi gol!');
-      return;
-    }
-    
-    const isDuplicate = localCategories.some(cat => 
-      cat.name.toLowerCase() === editingCategory.name.toLowerCase() && cat.id !== editingCategory.id
-    );
-
-    if (isDuplicate) {
-      toast.error('Există deja o categorie cu acest nume!');
-      return;
-    }
-
-    let updatedCategories;
-    let savedCategory;
-    if (isEditing) {
-      updatedCategories = localCategories.map(cat => 
-        cat.id === editingCategory.id ? editingCategory : cat
-      );
-      savedCategory = editingCategory;
-      toast.success('Categoria a fost actualizată cu succes!');
-    } else {
-      const newCategory = { ...editingCategory, id: generateId(), active: true };
-      updatedCategories = [...localCategories, newCategory];
-      savedCategory = newCategory;
-      toast.success('Categoria a fost adăugată cu succes!');
-    }
-
-    setLocalCategories(updatedCategories);
-    updateCategories(updatedCategories);
-    if (onCategorySaved) {
-      onCategorySaved(savedCategory);
-    }
-    
-    if (autoCloseOnSave) {
-      onClose();
-    } else {
-      setEditingCategory(null);
-      setIsEditing(false);
-    }
+    openEditCategoryModal(category);
   };
 
   const deleteCategory = (categoryToDelete) => {
-    if (intervals.some(interval => interval.category === categoryToDelete.name)) {
+    const isCategoryUsed = intervals.some(interval => interval.categoryId === categoryToDelete.id);
+    
+    if (isCategoryUsed) {
       toast.error('Nu se poate șterge o categorie utilizată în intervale!');
     } else {
       const updatedCategories = localCategories.filter(cat => cat.id !== categoryToDelete.id);
@@ -105,18 +56,17 @@ const CategoryModal = ({
     }
   };
 
-  const filteredCategories = showInactive 
-    ? localCategories 
-    : localCategories.filter(cat => cat.active);
+  const toggleShowOnlyActive = () => {
+    setShowOnlyActive(!showOnlyActive);
+  };
+
+  const filteredCategories = showOnlyActive
+    ? localCategories.filter(cat => cat.active)
+    : localCategories;
 
   const sortedCategories = [...filteredCategories].sort((a, b) => 
     a.name.localeCompare(b.name, 'ro', { sensitivity: 'base' })
   );
-
-  const cancelEdit = () => {
-    setEditingCategory(null);
-    setIsEditing(false);
-  };
 
   return (
     <Modal
@@ -158,55 +108,17 @@ const CategoryModal = ({
         }
       }}
     >
-      <h2 className="text-xl font-semibold mb-4">
-        {isEditing ? 'Editează Categoria' : 'Adaugă Categorie Nouă'}
-      </h2>
-      <div className="mb-4">
-        <div className="flex flex-col space-y-2">
-          <input
-            type="text"
-            value={editingCategory ? editingCategory.name : ''}
-            onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
-            className="p-2 border rounded"
-            placeholder="Numele categoriei"
-          />
-          {isEditing && (
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={editingCategory.active}
-                onChange={(e) => setEditingCategory({ ...editingCategory, active: e.target.checked })}
-                className="mr-2"
-              />
-              <label>Activ</label>
-            </div>
-          )}
-          <button
-            onClick={saveCategory}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            {isEditing ? 'Modifică' : 'Adaugă'}
-          </button>
-          {isEditing && (
-            <button
-              onClick={cancelEdit}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
-            >
-              Renunță
-            </button>
-          )}
-        </div>
-      </div>
       <h2 className="text-xl font-semibold mb-4">Categorii</h2>
-      <div className="flex items-center mb-4">
-        <input
-          type="checkbox"
-          id="showInactive"
-          checked={showInactive}
-          onChange={(e) => setShowInactive(e.target.checked)}
-          className="mr-2"
-        />
-        <label htmlFor="showInactive">Arată categorii inactive</label>
+      <div className="mb-4">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={showOnlyActive}
+            onChange={toggleShowOnlyActive}
+            className="mr-2"
+          />
+          Arată doar categoriile active
+        </label>
       </div>
       <ul className="space-y-2 mb-4">
         {sortedCategories.map((category) => (
@@ -229,6 +141,12 @@ const CategoryModal = ({
           </li>
         ))}
       </ul>
+      <button
+        onClick={addNewCategory}
+        className="px-4 py-2 bg-blue-500 text-white rounded mb-4 w-full"
+      >
+        Adaugă Categorie Nouă
+      </button>
       <button
         onClick={onClose}
         className="px-4 py-2 bg-gray-300 text-gray-700 rounded mt-4 w-full"

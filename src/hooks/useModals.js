@@ -13,6 +13,10 @@ export const useModals = () => {
     autoCloseOnSave: true
   });
 
+  // New state for EditCategoryModal
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
+  const [categoryToEdit, setCategoryToEdit] = useState(null);
+
   const openEditModal = (interval, index) => {
     setEditingInterval(index !== undefined ? { ...interval, index } : interval);
     setIsEditModalOpen(true);
@@ -48,6 +52,19 @@ export const useModals = () => {
     });
   };
 
+  // Functions to handle EditCategoryModal
+  const openEditCategoryModal = (category) => {
+    console.log('Opening Edit Category Modal with category:', category);
+    setCategoryToEdit(category);
+    setIsEditCategoryModalOpen(true);
+  };
+
+  const closeEditCategoryModal = () => {
+    console.log('Closing Edit Category Modal');
+    setCategoryToEdit(null);
+    setIsEditCategoryModalOpen(false);
+  };
+
   return {
     isEditModalOpen,
     isDeleteModalOpen,
@@ -62,5 +79,10 @@ export const useModals = () => {
     openCategoryModal,
     closeCategoryModal,
     setEditingInterval,
+    // New modal states and functions
+    isEditCategoryModalOpen,
+    categoryToEdit,
+    openEditCategoryModal,
+    closeEditCategoryModal
   };
 };
