@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ImportExportData from './ImportExportData';
+import ContactModal from './ContactModal';
 
 const HamburgerMenu = ({ 
   isOpen, 
@@ -10,14 +11,30 @@ const HamburgerMenu = ({
   setIntervals, 
   setCategories
 }) => {
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
   const handleMenuItemClick = (action) => {
     action();
     setIsOpen(false);
   };
 
   const handleOpenCategoryModal = () => {
-    openCategoryModal(null, false, false, false); // Set autoCloseOnSave to false
+    openCategoryModal(null, false, false, false);
     setIsOpen(false);
+  };
+
+  const handleOpenContactModal = () => {
+    setIsContactModalOpen(true);
+    setIsOpen(false);
+  };
+
+  const handleCloseContactModal = () => {
+    setIsContactModalOpen(false);
+  };
+
+  const handleConfirmContact = () => {
+    window.open('https://github.com/AgerVision/time-tracker/issues', '_blank');
+    setIsContactModalOpen(false);
   };
 
   return (
@@ -47,8 +64,20 @@ const HamburgerMenu = ({
             setCategories={setCategories}
             onActionComplete={() => setIsOpen(false)}
           />
+          <button
+            onClick={handleOpenContactModal}
+            className="w-full px-4 py-2 text-white text-center bg-purple-600 hover:bg-purple-700 transition-colors duration-200"
+          >
+            Contact
+          </button>
         </div>
       )}
+
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={handleCloseContactModal}
+        onConfirm={handleConfirmContact}
+      />
     </div>
   );
 };
